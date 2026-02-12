@@ -346,12 +346,3 @@ curl -fsS http://127.0.0.1:4040/api/tunnels
 temporal operator cluster health --address 127.0.0.1:7233
 ```
 
-## Project Mapping
-
-Configured in `config/projects.json`.
-
-Default:
-- team key: `K20`
-- repo: `/Users/ava/main/projects/kahunas2`
-- worktrees root: `/Users/ava/main/projects/kahunas2-worktrees`
-- clone env script: `.conductor/clone-env.sh`
