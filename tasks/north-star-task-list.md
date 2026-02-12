@@ -6,6 +6,17 @@ Status legend: `Planned` | `In Progress` | `Done` | `Blocked`
 
 Architecture standard: best-in-class means thin workflows + registry/policy-driven matrices + shared matrix runtime + adapter-based tool execution.
 
+## Current State Snapshot (2026-02-12)
+- Active `In Progress` tasks: `NS-0031` Email Communication Tools and `NS-0050` Manus Async E2E Proof Run.
+- Verified implemented surface for `NS-0031`: AgentMail transport/workflow, matrix switching, sender trust guard, Manus async webhook wake-up path, and attachment send/receive handling.
+- Live proof of start leg on 2026-02-12: inbound email reached `POST /webhooks/agentmail` (`200`), Manus task `P2WXcyA9PguThdpiBynWgu` was created, and teammate tracking reply was sent.
+- Runtime unblock verified on 2026-02-12: Manus callbacks now validate and return `200` on `/webhooks/manus` after signature verification correction + default AgentMail route fallback when Manus omits query routing params.
+- Finish proof captured on 2026-02-12: `task_stopped_P2WXcyA9PguThdpiBynWgu_1770878279` arrived on `POST /webhooks/manus` (`200`) with `stop_reason=finish`, and final teammate email with top-3 findings was sent (`Re: home automation` at `2026-02-12T06:38:07.279Z`).
+- Open completion gaps:
+  - still need one required real proof under `NS-0050`: `stop_reason=ask` with clarification follow-up.
+  - no real calendar execution action path for meeting requests (`NS-0049` still planned).
+- Repository status at snapshot time: docs updates in progress (`tasks/north-star-task-list.md`, `tasks/north-star-roadmap.md`).
+
 ## Completed Foundations
 - [x] `NS-0001` Operator workflow delegates lifecycle via durable orchestration (`Done`)
 - [x] `NS-0002` Registry loader/resolver and execution planning integrated (`Done`)
@@ -344,7 +355,7 @@ Architecture standard: best-in-class means thin workflows + registry/policy-driv
     - non-allowlisted senders are ignored before execution (`agentmail_sender_ignored`).
   Remaining:
   - calendar/meeting execution tooling (currently clarification-first; no calendar API action path yet).
-  - end-to-end live proof for inbound email -> Manus async completion webhook -> final follow-up email in real inbox traffic.
+  - end-to-end live proof for inbound email -> Manus async completion webhook -> final follow-up email in real inbox traffic (`NS-0050`) is now partially complete (`finish` proof captured); `ask` proof artifact remains.
   Acceptance:
   - workflow emits structured email summaries with source links and optional attachment artifacts.
   - matrix path and failure reasons are captured in memory for replayable learning.
@@ -389,11 +400,20 @@ Architecture standard: best-in-class means thin workflows + registry/policy-driv
   - outbound confirmation/state memory includes `calendarId`, `eventId`, `htmlLink`, attendees, and normalized start/end timezone data.
   Source baseline: Context7 `/websites/developers_google_workspace_calendar_api` (events reference, auth scopes, error handling guides).
 
-- [ ] `NS-0050` Manus Async E2E Proof Run (`Planned`)
+- [ ] `NS-0050` Manus Async E2E Proof Run (`In Progress`)
   Deliverable: execute a full real-flow proof (`email -> Manus start -> webhook stop -> follow-up email with attachment`) and capture artifact evidence in `runs/` + task docs.
+  Current state:
+  - webhook verification path fixed in runtime; Manus callbacks now acknowledge with `200`.
+  - route fallback now handles Manus callbacks that omit workflow query params by signaling default AgentMail workflow.
+  - `finish` proof captured in live inbox traffic:
+    - inbound webhook accepted: `POST /webhooks/agentmail` (`200`)
+    - Manus task created/completed: `P2WXcyA9PguThdpiBynWgu`
+    - completion webhook: `task_stopped_P2WXcyA9PguThdpiBynWgu_1770878279` with `stop_reason=finish` (`POST /webhooks/manus` => `200`)
+    - final teammate follow-up sent: `Re: home automation` at `2026-02-12T06:38:07.279Z`
+    - run artifacts: `runs/xena:xena:agentmail:kahunas2:event:<b10d23ec-4be9-400c-8853-4acab956515b@Spark>/research-email-kahunas2.manus.json`, `runs/xena:xena:agentmail:kahunas2:event:<b10d23ec-4be9-400c-8853-4acab956515b@Spark>/research-email-kahunas2.md`
   Acceptance:
-  - one completed run with real webhook callback and final teammate reply.
-  - one `stop_reason=ask` run with clarification follow-up behavior.
+  - [x] one completed run with real webhook callback and final teammate reply.
+  - [ ] one `stop_reason=ask` run with clarification follow-up behavior.
 
 - [ ] `NS-0051` Research Provider Router (Coding vs General) (`Planned`)
   Deliverable: enforce deterministic provider routing so coding-task research uses ExaCode/Context7 adapters (only when needed) and Manus remains general/product/lifestyle research only.
@@ -416,6 +436,6 @@ Architecture standard: best-in-class means thin workflows + registry/policy-driv
   Acceptance: repeated failures trigger known playbook before escalating.
 
 ## Suggested Immediate Next 3
-- [ ] `NS-0040` Operator Metrics Surface
-- [ ] `NS-0030` Slack Communication Tools
-- [ ] `NS-0031` Email Communication Tools
+- [ ] `NS-0050` Manus Async E2E Proof Run (capture `finish` + `ask` proof runs with real inbox artifacts)
+- [ ] `NS-0049` Google Calendar API Tool Registry + Skill
+- [ ] `NS-0043` Orchestrator-Only Task Contract

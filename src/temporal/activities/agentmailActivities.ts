@@ -4,6 +4,7 @@ import {
   agentmailGetMessage,
   agentmailGetMessageAttachment,
   agentmailListInboxes,
+  agentmailReplyToMessage,
   agentmailSendMessage,
   createAgentmailClient,
 } from "../../agentmail.js";
@@ -222,13 +223,15 @@ export async function agentmailSendMessageFromXena(opts: {
   subject: string;
   body: string;
   to?: string | string[];
+  replyToMessageId?: string;
   attachments?: AgentmailSendAttachment[];
   dryRun?: boolean;
 }): Promise<AgentmailSendResult> {
   try {
     const env = loadWorkerEnv();
-    const recipients = parseRecipients(opts.to, env.XENA_OWNER_EMAIL);
-    if (recipients.length === 0) {
+    const replyToMessageId = asString(opts.replyToMessageId);
+    const recipients = parseRecipients(opts.to, replyToMessageId ? undefined : env.XENA_OWNER_EMAIL);
+    if (recipients.length === 0 && !replyToMessageId) {
       return {
         sent: false,
         reason: "owner_email_missing",
@@ -262,14 +265,23 @@ export async function agentmailSendMessageFromXena(opts: {
       .map(normalizeAttachment)
       .filter((attachment): attachment is NonNullable<ReturnType<typeof normalizeAttachment>> => attachment !== null);
 
-    const sent = await agentmailSendMessage({
-      client,
-      inboxId: ensured.inboxId,
-      to: recipients,
-      subject,
-      text,
-      attachments,
-    });
+    const sent = replyToMessageId
+      ? await agentmailReplyToMessage({
+          client,
+          inboxId: ensured.inboxId,
+          messageId: replyToMessageId,
+          to: recipients.length > 0 ? recipients : undefined,
+          text,
+          attachments,
+        })
+      : await agentmailSendMessage({
+          client,
+          inboxId: ensured.inboxId,
+          to: recipients,
+          subject,
+          text,
+          attachments,
+        });
 
     return {
       sent: true,

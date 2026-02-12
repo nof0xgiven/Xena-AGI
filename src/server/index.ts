@@ -1058,9 +1058,13 @@ async function main() {
       return reply.code(400).send({ error: "invalid json" });
     }
 
-    const requestBaseUrl =
-      env.XENA_PUBLIC_BASE_URL ??
-      `${req.protocol === "https" ? "https" : "http"}://${req.headers.host ?? "localhost"}`;
+    const forwardedProtoRaw = asStringHeader(req.headers["x-forwarded-proto"]);
+    const forwardedHostRaw = asStringHeader(req.headers["x-forwarded-host"]);
+    const forwardedProto = forwardedProtoRaw?.split(",")[0]?.trim();
+    const forwardedHost = forwardedHostRaw?.split(",")[0]?.trim();
+    const inferredProto = forwardedProto || (req.protocol === "https" ? "https" : "http");
+    const inferredHost = forwardedHost || asStringHeader(req.headers.host) || "localhost";
+    const requestBaseUrl = env.XENA_PUBLIC_BASE_URL ?? `${inferredProto}://${inferredHost}`;
     const requestUrl = new URL(req.raw.url ?? "/webhooks/manus", requestBaseUrl);
     const requireSignature = parseBooleanEnv(env.MANUS_WEBHOOK_REQUIRE_SIGNATURE ?? "true");
     if (requireSignature) {
@@ -1121,10 +1125,34 @@ async function main() {
       receivedAt: asString(data.received_at) ?? new Date().toISOString(),
     };
 
-    const workflowTypeRaw = requestUrl.searchParams.get("workflowType")?.trim();
-    if (!workflowTypeRaw) {
-      return reply.code(400).send({ error: "missing workflowType query parameter" });
+    const defaultProjectForFallback = projects[0];
+    if (!defaultProjectForFallback) {
+      return reply.code(500).send({ error: "no configured projects available for Manus webhook fallback routing" });
     }
+    const fallbackAgentmailWorkflowId = `xena:agentmail:${defaultProjectForFallback.projectKey}`;
+    let workflowTypeRaw = requestUrl.searchParams.get("workflowType")?.trim();
+    let workflowId = requestUrl.searchParams.get("workflowId")?.trim();
+    let requestedProjectKey = requestUrl.searchParams.get("projectKey")?.trim();
+
+    if (!workflowTypeRaw || !workflowId) {
+      workflowTypeRaw = "agentmail";
+      workflowId = fallbackAgentmailWorkflowId;
+      requestedProjectKey = requestedProjectKey || defaultProjectForFallback.projectKey;
+      logger.warn(
+        {
+          eventType: signalPayload.eventType,
+          eventId: signalPayload.eventId,
+          taskId: signalPayload.taskId,
+          routeFallback: {
+            workflowType: workflowTypeRaw,
+            workflowId,
+            projectKey: requestedProjectKey,
+          },
+        },
+        "Manus webhook missing routing query params; applied default agentmail route fallback",
+      );
+    }
+
     const workflowType = normalizeWorkflowTypeKey(workflowTypeRaw);
     const currentManusRoutes = await getManusWebhookRoutes();
     const route = currentManusRoutes.get(workflowType);
@@ -1135,7 +1163,6 @@ async function main() {
       });
     }
 
-    const workflowId = requestUrl.searchParams.get("workflowId")?.trim();
     if (!workflowId) {
       return reply.code(400).send({ error: "missing workflowId query parameter" });
     }
@@ -1163,7 +1190,6 @@ async function main() {
 
     let workflowArgs: unknown[] = [];
     if (route.bootstrap === "agentmail") {
-      const requestedProjectKey = requestUrl.searchParams.get("projectKey")?.trim();
       if (!requestedProjectKey) {
         return reply.code(400).send({ error: "missing projectKey query parameter" });
       }

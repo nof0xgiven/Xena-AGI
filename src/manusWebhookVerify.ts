@@ -91,6 +91,7 @@ export async function verifyManusWebhookSignature(
 
   const bodyHashHex = crypto.createHash("sha256").update(opts.rawBody).digest("hex");
   const signatureContent = `${timestampRaw}.${opts.requestUrl}.${bodyHashHex}`;
+  const signatureContentBuffer = Buffer.from(signatureContent, "utf8");
   const contentHash = crypto.createHash("sha256").update(signatureContent).digest();
 
   let signatureBytes: Buffer;
@@ -117,8 +118,14 @@ export async function verifyManusWebhookSignature(
   }
 
   try {
-    const verified = crypto.verify("RSA-SHA256", contentHash, publicKeyPem, signatureBytes);
-    return verified ? { ok: true } : { ok: false, reason: "signature verification failed" };
+    // Manus signs the canonical "{timestamp}.{url}.{body_sha256_hex}" payload with RSA-SHA256.
+    // Keep a compatibility fallback for the legacy double-hash variant.
+    const verifiedCanonical = crypto.verify("RSA-SHA256", signatureContentBuffer, publicKeyPem, signatureBytes);
+    if (verifiedCanonical) {
+      return { ok: true };
+    }
+    const verifiedLegacyDoubleHash = crypto.verify("RSA-SHA256", contentHash, publicKeyPem, signatureBytes);
+    return verifiedLegacyDoubleHash ? { ok: true } : { ok: false, reason: "signature verification failed" };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     return { ok: false, reason: `signature verification error: ${detail}` };

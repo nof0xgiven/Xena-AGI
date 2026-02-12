@@ -119,6 +119,7 @@ type PendingResearchTask = {
   runId: string;
   taskId: string;
   taskUrl: string;
+  replyMessageId?: string;
   fromEmail: string;
   effectiveSubject: string;
   inboundBody: string;
@@ -481,6 +482,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${subject || "Clarification needed"}`,
         body: reply,
         to: [fromEmail],
+        replyToMessageId: event.messageId,
         dryRun,
       });
       await meta.mem0Add({
@@ -539,6 +541,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${subject || "Research update"}`,
         body: reply,
         to: [fromEmail],
+        replyToMessageId: event.messageId,
         dryRun,
       });
       await meta.mem0Add({
@@ -599,6 +602,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
       subject: `Re: ${subject || "Update"}`,
       body: reply,
       to: [fromEmail],
+      replyToMessageId: event.messageId,
       dryRun,
     });
     await meta.mem0Add({
@@ -867,6 +871,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
               runId,
               taskId: started.taskId,
               taskUrl: started.taskUrl,
+              replyMessageId: event.messageId,
               fromEmail,
               effectiveSubject,
               inboundBody,
@@ -1068,6 +1073,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${effectiveSubject || "Clarification needed"}`,
         body: clarificationReply,
         to: [fromEmail],
+        replyToMessageId: event.messageId,
         dryRun,
       });
       const failureKinds = failures.map((failure) => failure.errorKind);
@@ -1111,6 +1117,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
       subject: execution.replySubject,
       body: execution.replyBody,
       to: [fromEmail],
+      replyToMessageId: event.messageId,
       attachments: execution.attachments,
       dryRun,
     });
@@ -1306,6 +1313,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${pending.effectiveSubject || "Research follow-up"}`,
         body: clarificationReply,
         to: [pending.fromEmail],
+        replyToMessageId: pending.replyMessageId,
         dryRun,
       });
       await meta.mem0Add({
@@ -1394,6 +1402,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${pending.effectiveSubject || "Research update"}`,
         body: reply,
         to: [pending.fromEmail],
+        replyToMessageId: pending.replyMessageId,
         attachments: researchAttachment ? [researchAttachment] : [],
         dryRun,
       });
@@ -1438,6 +1447,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
         subject: `Re: ${pending.effectiveSubject || "Research update"}`,
         body,
         to: [pending.fromEmail],
+        replyToMessageId: pending.replyMessageId,
         dryRun,
       });
       await meta.mem0Add({

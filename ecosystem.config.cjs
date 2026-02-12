@@ -8,7 +8,11 @@ try {
     .split('\n')
     .forEach((line) => {
       const match = line.match(/^([^#=]+)=(.*)$/);
-      if (match) envVars[match[1].trim()] = match[2].trim();
+      if (!match) return;
+      const key = match[1].trim();
+      const value = match[2].trim();
+      if (!key || value.length === 0) return;
+      envVars[key] = value;
     });
 } catch (e) {}
 

@@ -40,7 +40,7 @@ const ServerEnvSchema = TemporalEnvSchema.extend({
   XENA_OWNER_EMAIL: z.string().min(1).optional(),
   XENA_OWNER_NAME: z.string().min(1).optional(),
   XENA_SAFE_SENDER_EMAILS: z.string().min(1).optional(),
-  MANUS_WEBHOOK_TOKEN: z.string().min(1).optional(),
+  MANUS_WEBHOOK_TOKEN: z.string().optional(),
   XENA_HTTP_PORT: z
     .string()
     .regex(/^\d+$/)
@@ -62,7 +62,7 @@ const WorkerEnvSchema = TemporalEnvSchema.extend({
     .string()
     .regex(/^\d+$/)
     .optional(),
-  MANUS_WEBHOOK_TOKEN: z.string().min(1).optional(),
+  MANUS_WEBHOOK_TOKEN: z.string().optional(),
   XENA_PUBLIC_BASE_URL: z.string().min(1).optional(),
   AGENTMAIL_API_KEY: z.string().min(1).optional(),
   AGENT_MAIL_API_KEY: z.string().min(1).optional(),

@@ -309,6 +309,55 @@ export async function agentmailSendMessage(opts: {
   };
 }
 
+export async function agentmailReplyToMessage(opts: {
+  client: AgentmailClient;
+  inboxId: string;
+  messageId: string;
+  text: string;
+  html?: string;
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+  replyTo?: string[];
+  attachments?: AgentmailOutgoingAttachment[];
+}): Promise<{ messageId?: string; threadId?: string; raw: unknown }> {
+  const attachments = (opts.attachments ?? []).map((attachment) => ({
+    filename: attachment.filename,
+    content_type: attachment.contentType,
+    content_disposition: attachment.contentDisposition,
+    content_id: attachment.contentId,
+    content: attachment.content,
+    url: attachment.url,
+  }));
+  const payload = await agentmailFetchJson({
+    client: opts.client,
+    path:
+      `/v0/inboxes/${encodeURIComponent(opts.inboxId)}` +
+      `/messages/${encodeURIComponent(opts.messageId)}/reply`,
+    method: "POST",
+    body: {
+      to: opts.to,
+      cc: opts.cc,
+      bcc: opts.bcc,
+      reply_to: opts.replyTo,
+      text: opts.text,
+      html: opts.html,
+      attachments: attachments.length > 0 ? attachments : undefined,
+    },
+  });
+  const row = asObject(payload);
+  const messageId =
+    asString(row.message_id) ??
+    asString(row.id) ??
+    asString(row.email_id);
+  const threadId = asString(row.thread_id) ?? asString(row.threadId);
+  return {
+    messageId,
+    threadId,
+    raw: payload,
+  };
+}
+
 export async function agentmailGetMessage(opts: {
   client: AgentmailClient;
   inboxId: string;
