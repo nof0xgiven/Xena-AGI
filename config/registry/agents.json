@@ -1,0 +1,53 @@
+{
+  "agents": [
+    {
+      "id": "agent.coding.primary",
+      "name": "Coding Primary",
+      "version": "1.0.0",
+      "description": "Primary autonomous coding agent composition.",
+      "enabled": true,
+      "tags": ["coding", "primary"],
+      "metadata": {},
+      "intentTypes": ["coding"],
+      "skillIds": ["skill.coding.lifecycle"],
+      "toolIds": [
+        "tool.discovery.teddy.default",
+        "tool.discovery.teddy.gpt_oss",
+        "tool.discovery.codex.exec",
+        "tool.codex.exec",
+        "tool.linear.comment",
+        "tool.linear.issue_read"
+      ],
+      "resourceIds": ["resource.codex.default", "resource.openai.reply"],
+      "weight": 100,
+      "constraints": {
+        "maxRiskLevel": "high",
+        "requireDeterministicTools": false
+      }
+    },
+    {
+      "id": "agent.research.primary",
+      "name": "Research Primary",
+      "version": "1.0.0",
+      "description": "Primary autonomous research brief agent composition.",
+      "enabled": true,
+      "tags": ["research", "primary"],
+      "metadata": {},
+      "intentTypes": ["research"],
+      "skillIds": ["skill.research.brief", "skill.research.async_followup"],
+      "toolIds": [
+        "tool.manus.research",
+        "tool.manus.webhook.signal",
+        "tool.research.verify_sources",
+        "tool.linear.comment",
+        "tool.linear.issue_read"
+      ],
+      "resourceIds": ["resource.manus.default", "resource.openai.reply"],
+      "weight": 100,
+      "constraints": {
+        "maxRiskLevel": "medium",
+        "requireDeterministicTools": false
+      }
+    }
+  ]
+}

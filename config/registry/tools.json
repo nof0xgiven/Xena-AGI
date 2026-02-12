@@ -1,0 +1,554 @@
+{
+  "tools": [
+    {
+      "id": "tool.linear.comment",
+      "name": "Linear Comment",
+      "version": "1.0.0",
+      "description": "Post teammate updates and results to Linear.",
+      "enabled": true,
+      "tags": ["linear", "communication"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "project_management"],
+        "entities": ["linear.issue.comment"],
+        "operations": ["write", "comment"],
+        "taskRoles": ["observer"],
+        "authority": 0.8,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["linear.comment.post"],
+      "deterministic": true,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.linear.issue_read",
+      "name": "Linear Issue Read",
+      "version": "1.0.0",
+      "description": "Fetch issue context and recent comments.",
+      "enabled": true,
+      "tags": ["linear", "context"],
+      "metadata": {},
+      "surface": {
+        "domains": ["tasks", "project_management"],
+        "entities": ["linear.issue"],
+        "operations": ["probe", "list", "read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.92,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["linear.issue.read"],
+      "deterministic": true,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.discovery.teddy.default",
+      "name": "Discovery Teddy Default",
+      "version": "1.0.0",
+      "description": "Primary discovery strategy using teddy default model.",
+      "enabled": true,
+      "tags": ["coding", "discovery"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.7,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["discover.repo"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.discovery.teddy.gpt_oss",
+      "name": "Discovery Teddy GPT-OSS",
+      "version": "1.0.0",
+      "description": "Alternate teddy discovery strategy using gpt-oss-120b.",
+      "enabled": true,
+      "tags": ["coding", "discovery", "fallback"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.72,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["discover.repo"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.discovery.codex.exec",
+      "name": "Discovery Codex Exec",
+      "version": "1.0.0",
+      "description": "Discovery strategy using codex headless execution for repo-grounded analysis.",
+      "enabled": true,
+      "tags": ["coding", "discovery", "adaptive"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.78,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["discover.repo", "discover.repo.adaptive"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.plan.codex.direct",
+      "name": "Plan Codex Direct",
+      "version": "1.0.0",
+      "description": "Primary planning strategy using codex direct planner prompt.",
+      "enabled": true,
+      "tags": ["coding", "planning"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["plan"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.78,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["plan.generate"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.plan.codex.recursive",
+      "name": "Plan Codex Recursive",
+      "version": "1.0.0",
+      "description": "Recursive codex planner strategy with bounded decomposition and synthesis.",
+      "enabled": true,
+      "tags": ["coding", "planning", "recursive"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["plan"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.82,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["plan.generate", "plan.generate.recursive"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.plan.teddy.direct",
+      "name": "Plan Teddy Direct",
+      "version": "1.0.0",
+      "description": "Alternate planning strategy using teddy direct planner prompt.",
+      "enabled": true,
+      "tags": ["coding", "planning", "fallback"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["plan"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.7,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["plan.generate"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.code.codex.exec",
+      "name": "Code Codex Exec",
+      "version": "1.0.0",
+      "description": "Primary implementation strategy using codex exec.",
+      "enabled": true,
+      "tags": ["coding", "implementation"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.8,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.implement"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.code.codex.exec.patch",
+      "name": "Code Codex Exec Patch",
+      "version": "1.0.0",
+      "description": "Patch-hardened codex implementation strategy for recovery attempts.",
+      "enabled": true,
+      "tags": ["coding", "implementation", "recovery"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.78,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.implement", "code.implement.recovery"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.code.teddy.exec",
+      "name": "Code Teddy Exec",
+      "version": "1.0.0",
+      "description": "Alternate implementation strategy using teddy.",
+      "enabled": true,
+      "tags": ["coding", "implementation", "fallback"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.68,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.implement"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.review.codex.review",
+      "name": "Review Codex Review",
+      "version": "1.0.0",
+      "description": "Runs codex uncommitted code review for blocker detection.",
+      "enabled": true,
+      "tags": ["coding", "review"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.82,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.review"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.review.codex.revision",
+      "name": "Review Codex Revision",
+      "version": "1.0.0",
+      "description": "Applies codex-driven revisions from review findings.",
+      "enabled": true,
+      "tags": ["coding", "review", "revision"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.8,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.review", "code.revise"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.review.codex.revision.focused",
+      "name": "Review Codex Revision Focused",
+      "version": "1.0.0",
+      "description": "Applies focused codex revisions targeting only blocking findings.",
+      "enabled": true,
+      "tags": ["coding", "review", "revision", "focused"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.82,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.review", "code.revise"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.review.teddy.review",
+      "name": "Review Teddy Review",
+      "version": "1.0.0",
+      "description": "Runs teddy-based review pass for blocker detection.",
+      "enabled": true,
+      "tags": ["coding", "review", "fallback"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review"],
+        "operations": ["execute", "analyze"],
+        "taskRoles": ["controller"],
+        "authority": 0.68,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.review"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.review.teddy.revision",
+      "name": "Review Teddy Revision",
+      "version": "1.0.0",
+      "description": "Applies teddy-driven revisions from review findings.",
+      "enabled": true,
+      "tags": ["coding", "review", "revision", "fallback"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review", "patch"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.66,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.review", "code.revise"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.communication.email.semantic",
+      "name": "Email Semantic Strategy",
+      "version": "1.0.0",
+      "description": "Classifies and composes teammate-style email replies with memory-aware reasoning.",
+      "enabled": true,
+      "tags": ["communication", "email", "semantic"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "tasks"],
+        "entities": ["email.message"],
+        "operations": ["classify", "reply", "read"],
+        "taskRoles": ["controller", "source"],
+        "authority": 0.74,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["communication.email.classify", "communication.email.reply"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.communication.email.attachment",
+      "name": "Email Attachment Strategy",
+      "version": "1.0.0",
+      "description": "Hydrates, analyzes, and returns attachment-aware email responses.",
+      "enabled": true,
+      "tags": ["communication", "email", "attachments"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "tasks"],
+        "entities": ["email.message", "email.attachment"],
+        "operations": ["read", "analyze", "reply"],
+        "taskRoles": ["controller", "source"],
+        "authority": 0.76,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["communication.email.attachments.read", "communication.email.reply"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.tasks.temporal.running",
+      "name": "Tasks Temporal Running",
+      "version": "1.0.0",
+      "description": "Probes running Temporal workflows that represent live Xena work.",
+      "enabled": true,
+      "tags": ["tasks", "temporal", "status"],
+      "metadata": {},
+      "surface": {
+        "domains": ["tasks", "workflow"],
+        "entities": ["temporal.workflow"],
+        "operations": ["probe", "list", "read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.98,
+        "freshnessSlaSec": 30
+      },
+      "capabilities": ["tasks.probe", "tasks.status.snapshot", "workflow.list"],
+      "deterministic": true,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.tasks.linear.assigned",
+      "name": "Tasks Linear Assigned",
+      "version": "1.0.0",
+      "description": "Probes currently assigned non-completed Linear issues.",
+      "enabled": true,
+      "tags": ["tasks", "linear", "status"],
+      "metadata": {},
+      "surface": {
+        "domains": ["tasks", "project_management"],
+        "entities": ["linear.issue"],
+        "operations": ["probe", "list", "read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.92,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["tasks.probe", "tasks.list", "linear.issue.read"],
+      "deterministic": true,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.tasks.email.followups",
+      "name": "Tasks Email Followups",
+      "version": "1.0.0",
+      "description": "Probes pending email follow-ups from AgentMail workflow memory signals.",
+      "enabled": true,
+      "tags": ["tasks", "email", "followup"],
+      "metadata": {},
+      "surface": {
+        "domains": ["tasks", "communication"],
+        "entities": ["email.followup", "email.message"],
+        "operations": ["probe", "list", "read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.74,
+        "freshnessSlaSec": 180
+      },
+      "capabilities": ["tasks.probe", "communication.email.read"],
+      "deterministic": false,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.tasks.memory.followups",
+      "name": "Tasks Memory Followups",
+      "version": "1.0.0",
+      "description": "Probes unresolved follow-up signals persisted in memory namespaces.",
+      "enabled": true,
+      "tags": ["tasks", "memory", "followup"],
+      "metadata": {},
+      "surface": {
+        "domains": ["tasks", "memory"],
+        "entities": ["memory.followup"],
+        "operations": ["probe", "search", "read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.7,
+        "freshnessSlaSec": 300
+      },
+      "capabilities": ["tasks.probe", "memory.search"],
+      "deterministic": false,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.codex.exec",
+      "name": "Codex Executor",
+      "version": "1.0.0",
+      "description": "Executes coding and review tasks through codex CLI.",
+      "enabled": true,
+      "tags": ["coding", "execution"],
+      "metadata": {},
+      "surface": {
+        "domains": ["coding"],
+        "entities": ["repository", "review", "plan"],
+        "operations": ["execute", "analyze", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.8,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": ["code.plan", "code.implement", "code.review"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.manus.research",
+      "name": "Manus Research",
+      "version": "1.0.0",
+      "description": "Runs web-connected research tasks through Manus and returns synthesis plus artifact links.",
+      "enabled": true,
+      "tags": ["research", "web", "manus", "presentation"],
+      "metadata": {},
+      "surface": {
+        "domains": ["research", "integration"],
+        "entities": ["web.source", "research.brief", "presentation.deck"],
+        "operations": ["execute", "search", "analyze", "read"],
+        "taskRoles": ["controller", "source"],
+        "authority": 0.9,
+        "freshnessSlaSec": 180
+      },
+      "capabilities": ["research.fetch", "research.summarize", "web.navigate", "research.presentation.generate"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.manus.webhook.signal",
+      "name": "Manus Webhook Signal",
+      "version": "1.0.0",
+      "description": "Receives Manus task webhooks and signals durable workflows for async follow-up execution.",
+      "enabled": true,
+      "tags": ["research", "manus", "webhook", "workflow", "async"],
+      "metadata": {
+        "workflowRoutes": [
+          {
+            "workflowType": "agentmail",
+            "workflowName": "agentmailWorkflow",
+            "signalName": "manusEvent",
+            "dispatchMode": "signalWithStart",
+            "bootstrap": "agentmail"
+          }
+        ]
+      },
+      "surface": {
+        "domains": ["integration", "workflow", "communication"],
+        "entities": ["manus.task", "temporal.workflow.signal"],
+        "operations": ["read", "start", "analyze"],
+        "taskRoles": ["source", "controller"],
+        "authority": 0.95,
+        "freshnessSlaSec": 15
+      },
+      "capabilities": ["research.task.start", "research.task.webhook", "workflow.signal.receive", "communication.email.followup"],
+      "deterministic": true,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.teddy.research",
+      "name": "Teddy Research (Legacy)",
+      "version": "1.0.0",
+      "description": "Legacy local research synthesis runner retained for compatibility.",
+      "enabled": false,
+      "tags": ["research", "legacy"],
+      "metadata": {},
+      "surface": {
+        "domains": ["research"],
+        "entities": ["research.brief"],
+        "operations": ["execute", "analyze", "read"],
+        "taskRoles": ["controller"],
+        "authority": 0.45,
+        "freshnessSlaSec": 300
+      },
+      "capabilities": ["research.fetch", "research.summarize"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.research.verify_sources",
+      "name": "Research Source Verification",
+      "version": "1.0.0",
+      "description": "Canonicalizes and validates source URLs.",
+      "enabled": true,
+      "tags": ["research", "sources"],
+      "metadata": {},
+      "surface": {
+        "domains": ["research"],
+        "entities": ["web.source"],
+        "operations": ["verify", "read"],
+        "taskRoles": ["observer"],
+        "authority": 0.9,
+        "freshnessSlaSec": 180
+      },
+      "capabilities": ["research.verify_sources"],
+      "deterministic": true,
+      "riskLevel": "low"
+    }
+  ]
+}

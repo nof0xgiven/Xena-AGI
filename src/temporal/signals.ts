@@ -1,0 +1,9 @@
+export const SIGNAL_TICKET_WAKE = "ticketWake";
+export const SIGNAL_LINEAR_COMMENT = "linearComment";
+export const SIGNAL_GITHUB_PR = "githubPr";
+export const QUERY_TICKET_STATUS = "ticketStatus";
+export const SIGNAL_OPERATOR_INTENT = "operatorIntent";
+export const SIGNAL_OPERATOR_CONTROL = "operatorControl";
+export const QUERY_OPERATOR_STATUS = "operatorStatus";
+export const SIGNAL_AGENTMAIL_EVENT = "agentmailEvent";
+export const SIGNAL_MANUS_EVENT = "manusEvent";

@@ -1,0 +1,165 @@
+{
+  "tools": [
+    {
+      "id": "tool.discovery.learned.matrix",
+      "name": "Learned Discovery Matrix",
+      "version": "1.0.0",
+      "description": "Adaptive discovery strategy learned from runtime failures and successful recovery paths.",
+      "enabled": true,
+      "tags": [
+        "coding",
+        "discovery",
+        "learned",
+        "matrix"
+      ],
+      "metadata": {
+        "learnedAt": "2026-02-11T09:31:32.940Z",
+        "selectedStrategy": "teddy-gpt-oss",
+        "selectedToolId": "tool.discovery.teddy.gpt_oss",
+        "triggerErrorKinds": [
+          "unknown"
+        ],
+        "strategyPath": [
+          "teddy-default",
+          "teddy-gpt-oss"
+        ],
+        "attempts": 2,
+        "lastIssueIdentifier": "K20-1124"
+      },
+      "surface": {
+        "domains": [
+          "coding"
+        ],
+        "entities": [
+          "repository"
+        ],
+        "operations": [
+          "execute",
+          "analyze"
+        ],
+        "taskRoles": [
+          "controller"
+        ],
+        "authority": 0.75,
+        "freshnessSlaSec": 120
+      },
+      "capabilities": [
+        "discover.repo",
+        "discover.repo.learned"
+      ],
+      "deterministic": false,
+      "riskLevel": "medium"
+    }
+  ],
+  "skills": [
+    {
+      "id": "skill.coding.discovery.matrix",
+      "name": "Coding Discovery Matrix",
+      "version": "1.0.0",
+      "description": "Adaptive discovery skill that switches strategies based on error-pattern matrix and learns outcomes.",
+      "enabled": true,
+      "tags": [
+        "coding",
+        "discovery",
+        "learned",
+        "matrix"
+      ],
+      "metadata": {
+        "learnedAt": "2026-02-11T09:31:32.940Z",
+        "selectedStrategy": "teddy-gpt-oss",
+        "triggerErrorKinds": [
+          "unknown"
+        ],
+        "strategyPath": [
+          "teddy-default",
+          "teddy-gpt-oss"
+        ],
+        "attempts": 2,
+        "lastIssueIdentifier": "K20-1124"
+      },
+      "intentTypes": [
+        "coding"
+      ],
+      "requiredCapabilities": [
+        "discover.repo",
+        "linear.comment.post"
+      ],
+      "preferredToolIds": [
+        "tool.discovery.learned.matrix",
+        "tool.discovery.teddy.gpt_oss",
+        "tool.discovery.codex.exec",
+        "tool.discovery.teddy.default",
+        "tool.linear.comment",
+        "tool.linear.issue_read"
+      ],
+      "preferredResourceIds": [
+        "resource.codex.default",
+        "resource.openai.reply"
+      ],
+      "guardrails": [
+        "When repeated failures occur, switch strategy family rather than retrying identical calls.",
+        "Persist successful recovery paths into registry and memory for reuse.",
+        "Post concise teammate updates for each strategy switch."
+      ],
+      "outputContract": {
+        "required": [
+          "discovery_summary",
+          "relevant_files",
+          "risks",
+          "next_steps"
+        ]
+      }
+    }
+  ],
+  "agents": [
+    {
+      "id": "agent.coding.discovery.matrix",
+      "name": "Coding Discovery Matrix Agent",
+      "version": "1.0.0",
+      "description": "Learns and applies adaptive discovery strategy transitions after failures.",
+      "enabled": true,
+      "tags": [
+        "coding",
+        "discovery",
+        "learned",
+        "matrix"
+      ],
+      "metadata": {
+        "learnedAt": "2026-02-11T09:31:32.940Z",
+        "selectedStrategy": "teddy-gpt-oss",
+        "triggerErrorKinds": [
+          "unknown"
+        ],
+        "strategyPath": [
+          "teddy-default",
+          "teddy-gpt-oss"
+        ],
+        "attempts": 2,
+        "lastIssueIdentifier": "K20-1124"
+      },
+      "intentTypes": [
+        "coding"
+      ],
+      "skillIds": [
+        "skill.coding.discovery.matrix"
+      ],
+      "toolIds": [
+        "tool.discovery.learned.matrix",
+        "tool.discovery.teddy.gpt_oss",
+        "tool.discovery.codex.exec",
+        "tool.discovery.teddy.default",
+        "tool.linear.comment",
+        "tool.linear.issue_read"
+      ],
+      "resourceIds": [
+        "resource.codex.default",
+        "resource.openai.reply"
+      ],
+      "weight": 180,
+      "constraints": {
+        "maxRiskLevel": "high",
+        "requireDeterministicTools": false
+      }
+    }
+  ]
+}

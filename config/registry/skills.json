@@ -1,0 +1,114 @@
+{
+  "skills": [
+    {
+      "id": "skill.coding.lifecycle",
+      "name": "Coding Lifecycle",
+      "version": "1.0.0",
+      "description": "Run discover-plan-code-review-pr lifecycle with strict scope and validation.",
+      "enabled": true,
+      "tags": ["coding", "workflow"],
+      "metadata": {},
+      "intentTypes": ["coding"],
+      "requiredCapabilities": ["discover.repo", "code.plan", "code.implement", "code.review", "linear.comment.post"],
+      "preferredToolIds": [
+        "tool.discovery.teddy.default",
+        "tool.discovery.teddy.gpt_oss",
+        "tool.discovery.codex.exec",
+        "tool.codex.exec",
+        "tool.linear.comment",
+        "tool.linear.issue_read"
+      ],
+      "preferredResourceIds": ["resource.codex.default", "resource.openai.reply"],
+      "guardrails": [
+        "No mocked production logic",
+        "Run real validation checks",
+        "Use matrix-based strategy switching when repeated discovery errors occur",
+        "Persist successful adaptive patterns into registry and memory",
+        "Post deterministic stage updates"
+      ],
+      "outputContract": {
+        "required": ["implementation_result", "review_summary", "proof"]
+      }
+    },
+    {
+      "id": "skill.research.brief",
+      "name": "Research Brief",
+      "version": "1.0.0",
+      "description": "Generate concise decision-grade brief with verified sources.",
+      "enabled": true,
+      "tags": ["research", "brief"],
+      "metadata": {},
+      "intentTypes": ["research"],
+      "requiredCapabilities": ["research.fetch", "research.summarize", "research.verify_sources", "linear.comment.post"],
+      "preferredToolIds": ["tool.manus.research", "tool.research.verify_sources", "tool.linear.comment", "tool.linear.issue_read"],
+      "preferredResourceIds": ["resource.manus.default", "resource.openai.reply"],
+      "guardrails": [
+        "Include source provenance",
+        "State uncertainty explicitly",
+        "Avoid unsupported claims"
+      ],
+      "outputContract": {
+        "required": ["summary", "findings", "sources", "confidence"]
+      }
+    },
+    {
+      "id": "skill.research.async_followup",
+      "name": "Research Async Follow-up",
+      "version": "1.0.0",
+      "description": "Start long-running research through Manus, wait on webhook signals, then deliver teammate follow-up with artifacts.",
+      "enabled": true,
+      "tags": ["research", "async", "communication"],
+      "metadata": {},
+      "intentTypes": ["research"],
+      "requiredCapabilities": [
+        "research.task.start",
+        "research.task.webhook",
+        "workflow.signal.receive",
+        "communication.email.followup"
+      ],
+      "preferredToolIds": [
+        "tool.manus.research",
+        "tool.manus.webhook.signal",
+        "tool.communication.email.semantic",
+        "tool.communication.email.attachment"
+      ],
+      "preferredResourceIds": ["resource.manus.default", "resource.openai.reply"],
+      "guardrails": [
+        "Start task first, then wait durably for webhook completion signal",
+        "No synthetic fallback replies when completion payload is missing",
+        "Always include task URL and explicit next action if Manus stop_reason is ask"
+      ],
+      "outputContract": {
+        "required": ["task_started", "completion_signal", "followup_reply", "artifacts"]
+      }
+    },
+    {
+      "id": "skill.operator.status_snapshot",
+      "name": "Operator Status Snapshot",
+      "version": "1.0.0",
+      "description": "Return live running work and assigned tasks from Temporal and Linear before composing teammate updates.",
+      "enabled": true,
+      "tags": ["operator", "status", "communication"],
+      "metadata": {},
+      "intentTypes": ["research"],
+      "requiredCapabilities": ["tasks.probe", "communication.email.reply"],
+      "preferredToolIds": [
+        "tool.tasks.temporal.running",
+        "tool.tasks.linear.assigned",
+        "tool.tasks.email.followups",
+        "tool.tasks.memory.followups",
+        "tool.communication.email.semantic",
+        "tool.communication.email.attachment"
+      ],
+      "preferredResourceIds": ["resource.openai.reply"],
+      "guardrails": [
+        "Use live Temporal and Linear data only",
+        "No canned fallback responses",
+        "Ask one clarification question only if confidence is low after task snapshot retrieval"
+      ],
+      "outputContract": {
+        "required": ["task_snapshot", "reply", "confidence"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "resources": [
+    {
+      "id": "resource.codex.default",
+      "name": "Codex Default",
+      "version": "1.0.0",
+      "description": "Primary coding resource for implementation and review.",
+      "enabled": true,
+      "tags": ["coding", "llm"],
+      "metadata": {},
+      "provider": "openai",
+      "harness": "codex-cli",
+      "model": "gpt-5",
+      "intentTypes": ["coding"],
+      "capabilities": ["code.plan", "code.implement", "code.review"],
+      "latencyTier": "balanced",
+      "costTier": "medium"
+    },
+    {
+      "id": "resource.manus.default",
+      "name": "Manus Default",
+      "version": "1.0.0",
+      "description": "Primary web-connected research and presentation generation resource.",
+      "enabled": true,
+      "tags": ["research", "manus", "web"],
+      "metadata": {},
+      "provider": "manus",
+      "harness": "manus-api",
+      "model": "default",
+      "intentTypes": ["research"],
+      "capabilities": ["research.fetch", "research.summarize", "web.navigate", "research.presentation.generate"],
+      "latencyTier": "balanced",
+      "costTier": "medium"
+    },
+    {
+      "id": "resource.teddy.default",
+      "name": "Teddy Default (Legacy)",
+      "version": "1.0.0",
+      "description": "Legacy local research resource retained for compatibility.",
+      "enabled": false,
+      "tags": ["research", "legacy"],
+      "metadata": {},
+      "provider": "teddy",
+      "harness": "teddy-cli",
+      "model": "default",
+      "intentTypes": ["research"],
+      "capabilities": ["research.fetch", "research.summarize"],
+      "latencyTier": "balanced",
+      "costTier": "low"
+    },
+    {
+      "id": "resource.openai.reply",
+      "name": "OpenAI Reply Model",
+      "version": "1.0.0",
+      "description": "Teammate response generation resource.",
+      "enabled": true,
+      "tags": ["assistant", "reply"],
+      "metadata": {},
+      "provider": "openai",
+      "harness": "ai-sdk",
+      "model": "env:XENA_OPENAI_MODEL",
+      "intentTypes": ["coding", "research"],
+      "capabilities": ["teammate.reply"],
+      "latencyTier": "fast",
+      "costTier": "medium"
+    }
+  ]
+}

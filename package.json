@@ -1,0 +1,42 @@
+{
+  "name": "xena-orchestrator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start:server": "node dist/server/index.js",
+    "start:worker": "node dist/temporal/worker.js",
+    "start:ingress": "node dist/ingress/index.js",
+    "dev:server": "tsx src/server/index.ts",
+    "dev:worker": "tsx src/temporal/worker.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^3.0.26",
+    "@hyperbrowser/sdk": "^0.83.0",
+    "@linear/sdk": "^59.0.0",
+    "@temporalio/activity": "^1.13.0",
+    "@temporalio/client": "^1.13.0",
+    "@temporalio/common": "^1.13.0",
+    "@temporalio/worker": "^1.13.0",
+    "@temporalio/workflow": "^1.13.0",
+    "@vercel/sandbox": "^1.5.0",
+    "ai": "^6.0.78",
+    "fastify": "^5.2.1",
+    "mem0ai": "^1.0.13",
+    "pino": "^9.6.0",
+    "playwright-core": "^1.58.2",
+    "svix": "^1.84.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "eslint": "^9.20.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

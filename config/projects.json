@@ -1,0 +1,10 @@
+[
+  {
+    "projectKey": "kahunas2",
+    "linearTeamKey": "K20",
+    "repoPath": "/Users/ava/main/projects/kahunas2",
+    "worktreesRoot": "/Users/ava/main/projects/kahunas2-worktrees",
+    "cloneEnvScript": ".conductor/clone-env.sh"
+  }
+]
+
