@@ -1,8 +1,7 @@
 # Xena 2p0 (Personal Operator Orchestrator)
 
-Source of truth: this repository only (`/Users/ava/xena 2p0`).
+Xena is a personal operator.
 
-Xena is a personal operator for one user (not a multi-tenant SaaS product).  
 Current focus is durable coding/research execution with adaptive strategy switching and learning.
 
 ## North-Star Alignment
