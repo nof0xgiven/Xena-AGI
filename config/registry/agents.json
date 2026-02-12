@@ -34,13 +34,18 @@
       "tags": ["research", "primary"],
       "metadata": {},
       "intentTypes": ["research"],
-      "skillIds": ["skill.research.brief", "skill.research.async_followup"],
+      "skillIds": ["skill.research.brief", "skill.research.async_followup", "skill.operator.calendar_management"],
       "toolIds": [
         "tool.manus.research",
         "tool.manus.webhook.signal",
         "tool.research.verify_sources",
         "tool.linear.comment",
-        "tool.linear.issue_read"
+        "tool.linear.issue_read",
+        "tool.google.calendar.events.list",
+        "tool.google.calendar.events.get",
+        "tool.google.calendar.events.insert",
+        "tool.google.calendar.events.patch",
+        "tool.google.calendar.events.delete"
       ],
       "resourceIds": ["resource.manus.default", "resource.openai.reply"],
       "weight": 100,

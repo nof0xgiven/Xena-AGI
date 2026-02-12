@@ -32,6 +32,14 @@ const ServerEnvSchema = TemporalEnvSchema.extend({
   XENA_MEMORY_RETENTION_DRY_RUN: z.string().min(1).optional(),
   AGENTMAIL_WEBHOOK_SECRET: z.string().min(1).optional(),
   AGENT_MAIL_WEBHOOK_SECRET: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_SECRET: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_REFRESH_TOKEN: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_DEFAULT_CALENDAR_ID: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_DEFAULT_TIMEZONE: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_SCOPES: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_TOKEN_URL: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_BASE_URL: z.string().min(1).optional(),
   XENA_AGENTMAIL_INTERVAL_MINUTES: z
     .string()
     .regex(/^\d+$/)
@@ -68,6 +76,14 @@ const WorkerEnvSchema = TemporalEnvSchema.extend({
   AGENT_MAIL_API_KEY: z.string().min(1).optional(),
   AGENTMAIL_BASE_URL: z.string().min(1).optional(),
   AGENT_MAIL_BASE_URL: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_CLIENT_SECRET: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_REFRESH_TOKEN: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_DEFAULT_CALENDAR_ID: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_DEFAULT_TIMEZONE: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_SCOPES: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_TOKEN_URL: z.string().min(1).optional(),
+  GOOGLE_CALENDAR_BASE_URL: z.string().min(1).optional(),
   XENA_INTERNAL_BASE_URL: z.string().min(1).optional(),
   XENA_AGENTMAIL_INBOX_ID: z.string().min(1).optional(),
   XENA_AGENTMAIL_USERNAME: z.string().min(1).optional(),
@@ -114,6 +130,14 @@ export type ServerEnv = TemporalEnv & {
   XENA_MEMORY_MAINTENANCE_INTERVAL_MINUTES?: string;
   XENA_MEMORY_RETENTION_DRY_RUN?: string;
   AGENTMAIL_WEBHOOK_SECRET?: string;
+  GOOGLE_CALENDAR_CLIENT_ID?: string;
+  GOOGLE_CALENDAR_CLIENT_SECRET?: string;
+  GOOGLE_CALENDAR_REFRESH_TOKEN?: string;
+  GOOGLE_CALENDAR_DEFAULT_CALENDAR_ID?: string;
+  GOOGLE_CALENDAR_DEFAULT_TIMEZONE?: string;
+  GOOGLE_CALENDAR_SCOPES?: string;
+  GOOGLE_CALENDAR_TOKEN_URL?: string;
+  GOOGLE_CALENDAR_BASE_URL?: string;
   XENA_AGENTMAIL_INTERVAL_MINUTES?: string;
   XENA_AGENTMAIL_DRY_RUN?: string;
   XENA_OWNER_EMAIL?: string;
@@ -136,6 +160,14 @@ export type WorkerEnv = TemporalEnv & {
   XENA_PUBLIC_BASE_URL?: string;
   AGENTMAIL_API_KEY?: string;
   AGENTMAIL_BASE_URL?: string;
+  GOOGLE_CALENDAR_CLIENT_ID?: string;
+  GOOGLE_CALENDAR_CLIENT_SECRET?: string;
+  GOOGLE_CALENDAR_REFRESH_TOKEN?: string;
+  GOOGLE_CALENDAR_DEFAULT_CALENDAR_ID?: string;
+  GOOGLE_CALENDAR_DEFAULT_TIMEZONE?: string;
+  GOOGLE_CALENDAR_SCOPES?: string;
+  GOOGLE_CALENDAR_TOKEN_URL?: string;
+  GOOGLE_CALENDAR_BASE_URL?: string;
   XENA_INTERNAL_BASE_URL?: string;
   XENA_AGENTMAIL_INBOX_ID?: string;
   XENA_AGENTMAIL_USERNAME?: string;

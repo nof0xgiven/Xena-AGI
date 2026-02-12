@@ -109,6 +109,41 @@
       "outputContract": {
         "required": ["task_snapshot", "reply", "confidence"]
       }
+    },
+    {
+      "id": "skill.operator.calendar_management",
+      "name": "Operator Calendar Management",
+      "version": "1.0.0",
+      "description": "Routes meeting intents through Google Calendar event operations for list/get/insert/patch/delete actions.",
+      "enabled": true,
+      "tags": ["operator", "calendar", "meetings"],
+      "metadata": {},
+      "intentTypes": ["research"],
+      "requiredCapabilities": [
+        "calendar.events.list",
+        "calendar.events.get",
+        "calendar.events.insert",
+        "calendar.events.patch",
+        "calendar.events.delete"
+      ],
+      "preferredToolIds": [
+        "tool.google.calendar.events.list",
+        "tool.google.calendar.events.get",
+        "tool.google.calendar.events.insert",
+        "tool.google.calendar.events.patch",
+        "tool.google.calendar.events.delete"
+      ],
+      "preferredResourceIds": ["resource.openai.reply"],
+      "guardrails": [
+        "Classify intent first and route to list/get before any mutation when context is incomplete",
+        "Require explicit target calendarId and eventId before patch or delete operations",
+        "Require explicit confirmation language before delete operations",
+        "Normalize attendee emails, start/end times, and timezone before insert or patch",
+        "Return write outcomes with calendarId, eventId, and operation status only"
+      ],
+      "outputContract": {
+        "required": ["intent", "operation", "calendar_event", "result", "confidence"]
+      }
     }
   ]
 }

@@ -73,18 +73,18 @@ Build Xena into a personal, proactive, always-learning operator where the method
 - Email channel now has independent inbound + outbound loop with sender trust guard, matrix strategy switching, and attachment send/receive support; calendar/tool expansion remains.
 
 ## Current Execution State (2026-02-12)
-- Only active in-progress task is `NS-0031` (Email Communication Tools).
+- Active in-progress task: `NS-0031` (Email Communication Tools).
 - Verified implemented path: inbound AgentMail intake, Manus async webhook signaling, and outbound reply/attachment handling are wired in workflow + activities.
 - Live run evidence on 2026-02-12: inbound email was accepted (`POST /webhooks/agentmail` => `200`), teammate sent tracking reply, and Manus task `WuZSEPkTtVRNGKmJe6wtWX` is active.
 - Webhook unblock verification on 2026-02-12: Manus callbacks now return `200` on `POST /webhooks/manus` after signature verification fix + default AgentMail route fallback for callbacks that omit query routing params.
-- Evidence gap: `runs/` currently contains Manus smoke artifacts (`runs/xena:manus-smoke-2/*`) but no full inbound email -> webhook -> follow-up email proof run artifact.
-- Meeting execution via real calendar actions remains pending under `NS-0049`.
+- `NS-0050` Manus Async E2E Proof Run is complete (working and done).
+- `NS-0049` is complete: registry + skill + calendar runtime + meeting-intent execution path are wired, and live CRUD proof passed (`create -> get -> patch -> list -> delete`).
+- NS-0049 artifact bundle: `runs/xena:ns-0049:calendar-proof:<timestamp>/*`.
 
 ## Outstanding for North Star
 - Orchestrator-only task contract hardening: every command path should route through durable workflow actions (`start|stop|restart|status`) with no direct-action bypass.
 - Skill playbook routing: objective-specific playbooks that select tool combinations and persist playbook outcomes for learning.
-- Calendar execution tool path remains unimplemented (meeting requests currently handled as clarification-first).
-- Manus async orchestration path is live and webhook acceptance is now unblocked; full inbox-driven end-to-end proof coverage (finish + ask) remains outstanding under `NS-0050`.
+- Manus async orchestration path is live with end-to-end inbox-driven proof coverage complete under `NS-0050`.
 - Learned workflow tuning and promotion-threshold calibration from live production incidents.
 - Proactive scheduler: independent task detection, check-ins, reminders, and follow-ups.
 - Cross-channel communications: Slack, WhatsApp, Voice strategies need to be added to the communication matrix policy (`NS-0052`) so the operating loop can select non-email paths. Blocked on channel tool implementations (`NS-0030`, `NS-0032`, `NS-0033`).
@@ -92,13 +92,12 @@ Build Xena into a personal, proactive, always-learning operator where the method
 - Operator observability: confidence trends, strategy switch reasons, learned pattern quality, trust score movement.
 
 ## Execution Order
-1. `NS-0050` Manus Async E2E Proof Run: capture the two required real proofs (`finish` + `ask`) now that webhook acceptance is unblocked.
-2. `NS-0049` Google Calendar API Tool Registry + Skill: close meeting execution gap in the active email channel.
-3. `NS-0043` Orchestrator-Only Task Contract: harden strict workflow-only action routing.
-4. P1 Memory Intelligence: retrieval precision tuning from retention outcomes and live recall quality.
-5. P1 Proactivity: scheduler + autonomous follow-up loops.
-6. P1 Channel expansion: Slack first, then WhatsApp/Voice.
-7. P2 Refinement: observability dashboards and learning-quality metrics.
+1. `NS-0043` Orchestrator-Only Task Contract: harden strict workflow-only action routing.
+2. `NS-0045` Skill Playbook Routing: record explicit objective playbooks in memory for learning and replay.
+3. P1 Memory Intelligence: retrieval precision tuning from retention outcomes and live recall quality.
+4. P1 Proactivity: scheduler + autonomous follow-up loops.
+5. P1 Channel expansion: Slack first, then WhatsApp/Voice.
+6. P2 Refinement: observability dashboards and learning-quality metrics.
 
 ## Definition of North Star Readiness
 - Xena selects strategies dynamically without hardcoded fallback trees.

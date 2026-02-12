@@ -556,6 +556,106 @@
       "capabilities": ["research.verify_sources"],
       "deterministic": true,
       "riskLevel": "low"
+    },
+    {
+      "id": "tool.google.calendar.events.list",
+      "name": "Google Calendar Events List",
+      "version": "1.0.0",
+      "description": "Lists Google Calendar events for a given calendar and time window.",
+      "enabled": true,
+      "tags": ["calendar", "google", "events", "read"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "integration", "tasks"],
+        "entities": ["google.calendar", "google.calendar.event"],
+        "operations": ["list", "read", "search"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.9,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["calendar.events.list"],
+      "deterministic": false,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.google.calendar.events.get",
+      "name": "Google Calendar Events Get",
+      "version": "1.0.0",
+      "description": "Fetches a specific Google Calendar event by calendar and event identifier.",
+      "enabled": true,
+      "tags": ["calendar", "google", "events", "read"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "integration"],
+        "entities": ["google.calendar.event"],
+        "operations": ["read"],
+        "taskRoles": ["source", "observer"],
+        "authority": 0.92,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["calendar.events.get"],
+      "deterministic": false,
+      "riskLevel": "low"
+    },
+    {
+      "id": "tool.google.calendar.events.insert",
+      "name": "Google Calendar Events Insert",
+      "version": "1.0.0",
+      "description": "Creates a new Google Calendar event for a meeting intent.",
+      "enabled": true,
+      "tags": ["calendar", "google", "events", "write"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "integration"],
+        "entities": ["google.calendar.event"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.88,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["calendar.events.insert"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.google.calendar.events.patch",
+      "name": "Google Calendar Events Patch",
+      "version": "1.0.0",
+      "description": "Applies partial updates to an existing Google Calendar event.",
+      "enabled": true,
+      "tags": ["calendar", "google", "events", "write"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "integration"],
+        "entities": ["google.calendar.event"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.88,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["calendar.events.patch"],
+      "deterministic": false,
+      "riskLevel": "medium"
+    },
+    {
+      "id": "tool.google.calendar.events.delete",
+      "name": "Google Calendar Events Delete",
+      "version": "1.0.0",
+      "description": "Deletes a Google Calendar event when cancellation is explicitly requested.",
+      "enabled": true,
+      "tags": ["calendar", "google", "events", "write"],
+      "metadata": {},
+      "surface": {
+        "domains": ["communication", "integration"],
+        "entities": ["google.calendar.event"],
+        "operations": ["execute", "write"],
+        "taskRoles": ["controller"],
+        "authority": 0.9,
+        "freshnessSlaSec": 60
+      },
+      "capabilities": ["calendar.events.delete"],
+      "deterministic": false,
+      "riskLevel": "medium"
     }
   ]
 }

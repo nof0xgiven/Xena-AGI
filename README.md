@@ -195,6 +195,7 @@ Xena email is now a standalone channel:
 - Dedicated durable workflow: `agentmailWorkflow`.
 - Inbound webhook path: `POST /webhooks/agentmail` (Svix signature verification supported via `AGENTMAIL_WEBHOOK_SECRET`).
 - Inbound messages are classified (research/digest/meeting/update/task-status/attachment/unknown) with confidence + clarification behavior.
+- Meeting requests now execute through Google Calendar event operations (`list/get/insert/patch/delete`) and return either execution confirmation or one explicit clarification question.
 - Low-confidence requests get one clarification question by email.
 - Research requests run through Manus (web-connected research engine) and return a sourced summary by email.
 - Research requests are started asynchronously through Manus; Xena waits durably and sends follow-up only after Manus webhook completion.
@@ -256,6 +257,9 @@ Implemented now:
 - Learned pattern quality scoring and lifecycle states (`observational`, `promoted`, `disabled`)
 - Personal preference memory model with planning/reply behavior shaping
 - Frontend sandbox + Hyperbrowser QA path for frontend PRs
+- Google Calendar execution path for meeting intents (registry tools + skill + runtime + AgentMail wiring), with live CRUD proof artifact:
+  - `runs/xena:ns-0049:calendar-proof:<timestamp>/calendar-crud-proof.json`
+  - `runs/xena:ns-0049:calendar-proof:<timestamp>/calendar-crud-proof.md`
 
 Not implemented yet:
 - Autonomous daily brief/follow-up scheduler (`NS-0022`, `NS-0023`)
@@ -274,6 +278,14 @@ Not implemented yet:
 - `TEMPORAL_ADDRESS`
 - `TEMPORAL_NAMESPACE`
 - `TEMPORAL_TASK_QUEUE`
+
+### Required for calendar execution
+
+- `GOOGLE_CALENDAR_CLIENT_ID`
+- `GOOGLE_CALENDAR_CLIENT_SECRET`
+- `GOOGLE_CALENDAR_REFRESH_TOKEN`
+- `GOOGLE_CALENDAR_DEFAULT_CALENDAR_ID` (for example `primary`)
+- `GOOGLE_CALENDAR_DEFAULT_TIMEZONE` (IANA timezone, for example `America/Los_Angeles`)
 
 ### Required for PR + sandbox automation
 
@@ -315,6 +327,9 @@ Not implemented yet:
 - `XENA_ROOT` (project root path; defaults to `process.cwd()`)
 - `XENA_PUBLIC_BASE_URL` (preferred public base URL for Manus webhook callbacks, e.g. your ngrok URL)
 - `XENA_INTERNAL_BASE_URL` (fallback internal base URL for local proxying)
+- `GOOGLE_CALENDAR_SCOPES` (optional override; defaults to least-privilege `https://www.googleapis.com/auth/calendar.events`)
+- `GOOGLE_CALENDAR_TOKEN_URL` (optional override; default `https://oauth2.googleapis.com/token`)
+- `GOOGLE_CALENDAR_BASE_URL` (optional override; default `https://www.googleapis.com/calendar/v3`)
 
 Sender identity guard:
 - Inbound AgentMail actions are executed only when sender email is in `XENA_SAFE_SENDER_EMAILS`.
@@ -348,4 +363,3 @@ curl -fsS http://127.0.0.1:9876/healthz
 curl -fsS http://127.0.0.1:4040/api/tunnels
 temporal operator cluster health --address 127.0.0.1:7233
 ```
-

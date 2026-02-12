@@ -40,6 +40,7 @@ type MetaActivities = Pick<
   | "agentmailHydrateInboundMessage"
   | "agentmailBuildTextAttachment"
   | "operatorGetTaskSnapshot"
+  | "calendarHandleMeetingRequest"
   | "researchStart"
   | "researchFinalizeTask"
 >;
@@ -206,6 +207,9 @@ function resolveCommunicationPlaybookId(
 ): string {
   if (intent === "research_request") {
     return useAsyncResearch ? "skill.research.async_followup" : "skill.research.brief";
+  }
+  if (intent === "meeting_request") {
+    return "skill.operator.calendar_management";
   }
   if (intent === "task_status_request" || intent === "status_update_request") {
     return "skill.operator.status_snapshot";
@@ -571,11 +575,22 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
     }
 
     let facts: string;
+    let directReply: string | null = null;
     if (intent.intent === "digest_request") {
       facts = `Digest cadence is currently ${intervalMinutes} minutes.`;
     } else if (intent.intent === "meeting_request") {
-      facts =
-        "Calendar execution tool is not configured yet. Reply with required date/time window, timezone, attendees, and objective.";
+      const calendarResult = await meta.calendarHandleMeetingRequest({
+        subject,
+        body: text || subject || "",
+        fromEmail,
+      });
+      if (calendarResult.outcome === "clarification") {
+        directReply = calendarResult.clarificationQuestion;
+        facts = `Calendar clarification required: ${calendarResult.clarificationQuestion}`;
+      } else {
+        directReply = calendarResult.summary;
+        facts = calendarResult.summary;
+      }
     } else if (intent.intent === "task_status_request" || intent.intent === "status_update_request") {
       const snapshot = await meta.operatorGetTaskSnapshot({
         projectKey: args.projectKey,
@@ -587,16 +602,18 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
       facts =
         "Execution context is available; if you want action now, specify the exact deliverable, constraints, and deadline.";
     }
-    const reply = await meta.openaiComposeCommunicationReply({
-      channel: "email",
-      from: fromEmail,
-      subject,
-      body: text || subject || "",
-      intent: intent.intent,
-      memory: memory.text,
-      preferences: userPreferences,
-      facts,
-    });
+    const reply =
+      directReply ??
+      (await meta.openaiComposeCommunicationReply({
+        channel: "email",
+        from: fromEmail,
+        subject,
+        body: text || subject || "",
+        intent: intent.intent,
+        memory: memory.text,
+        preferences: userPreferences,
+        facts,
+      }));
     const sent = await meta.agentmailSendMessageFromXena({
       projectKey: args.projectKey,
       subject: `Re: ${subject || "Update"}`,
@@ -802,10 +819,28 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
       let facts =
         intent.intent === "digest_request"
           ? `Digest cadence is currently ${intervalMinutes} minutes.`
-          : intent.intent === "meeting_request"
-            ? "Calendar execution tool is not configured yet. Reply with required date/time window, timezone, attendees, and objective."
-            : "No additional execution facts were required for this response.";
+          : "No additional execution facts were required for this response.";
       const attachments: OutboundAttachment[] = [];
+
+      if (intent.intent === "meeting_request") {
+        const calendarResult = await meta.calendarHandleMeetingRequest({
+          subject: effectiveSubject,
+          body: inboundBody,
+          fromEmail,
+        });
+        return {
+          ok: true,
+          intent: intent.intent,
+          confidence: intent.confidence,
+          replySubject: `Re: ${effectiveSubject || "Meeting update"}`,
+          replyBody:
+            calendarResult.outcome === "clarification"
+              ? calendarResult.clarificationQuestion
+              : calendarResult.summary,
+          attachments,
+          strategyReason: `calendar_meeting_request:${calendarResult.outcome}`,
+        };
+      }
 
       if (intent.intent === "attachment_request") {
         if (hydrated.attachments.length === 0) {
