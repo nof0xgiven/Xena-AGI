@@ -340,7 +340,7 @@ Architecture standard: best-in-class means thin workflows + registry/policy-driv
   - Outbound teammate replies can now include generated attachments (for example research summaries and attachment notes).
   - Identity trust guard implemented with strict safe sender list:
     - `src/identity/safeSenders.ts`
-    - default allowlist: `mark@kahunas.io`, `mark@markfox.me`
+    - default allowlist: configured via `XENA_SAFE_SENDER_EMAILS` env var
     - non-allowlisted senders are ignored before execution (`agentmail_sender_ignored`).
   Remaining:
   - calendar/meeting execution tooling (currently clarification-first; no calendar API action path yet).

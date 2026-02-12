@@ -124,7 +124,6 @@ function verifyGithubWebhookSignature(opts: {
 function extractTicketIdentifier(text: string | null | undefined): string | null {
   const t = (text ?? "").trim();
   if (!t) return null;
-  // Prefer the Kahunas format, but keep this generic enough for future teams.
   const m = t.match(/\bK\d+-\d+\b/i) ?? t.match(/\b[A-Z]+-\d+\b/);
   return m ? m[0].toUpperCase() : null;
 }
@@ -387,7 +386,6 @@ async function getManusWebhookRoutes(): Promise<Map<string, ManusWebhookRouteCon
   if (_cachedManusRoutes && now < _cachedManusRoutes.expiry) {
     return _cachedManusRoutes.routes;
   }
-  // Coalesce concurrent refreshes into a single registry load
   if (_routeRefreshPromise) return _routeRefreshPromise;
   _routeRefreshPromise = (async () => {
     try {
@@ -412,7 +410,6 @@ async function getManusWebhookRoutes(): Promise<Map<string, ManusWebhookRouteCon
 async function main() {
   const env = loadServerEnv();
   const projects = await loadProjectsConfig();
-  // Warm the route cache at boot, but routes are refreshed dynamically on TTL expiry.
   const manusWebhookRoutes = await getManusWebhookRoutes();
 
   const linear = createLinearClient(env.LINEAR_API_KEY);
@@ -577,6 +574,7 @@ async function main() {
               recipientEmail: env.XENA_OWNER_EMAIL,
               dryRun: agentmailDryRun,
               safeSenderEmails,
+              ownerName: env.XENA_OWNER_NAME,
             },
           ],
         });
@@ -608,7 +606,6 @@ async function main() {
   const rememberDelivery = (id: string) => {
     const now = Date.now();
     seenDeliveries.set(id, now);
-    // keep bounded
     if (seenDeliveries.size > 5000) {
       for (const [k, v] of seenDeliveries) {
         if (now - v > 6 * 60 * 60_000) seenDeliveries.delete(k); // 6h
@@ -629,7 +626,6 @@ async function main() {
     "Loaded Manus webhook route registry",
   );
 
-  // Capture the raw request bytes for signature verification.
   fastify.addContentTypeParser(
     "application/json",
     { parseAs: "buffer" },
@@ -875,7 +871,6 @@ async function main() {
     const parsed = parseLinearIdentifier(ticket);
     if (!parsed) return reply.code(200).send({ ok: true });
 
-    // Only wake tickets that exist and are assigned to Xena.
     const issuesConn = await (linear as any).issues({
       first: 1,
       filter: { team: { key: { eq: parsed.teamKey } }, number: { eq: parsed.number } },
@@ -1039,6 +1034,7 @@ async function main() {
           recipientEmail: env.XENA_OWNER_EMAIL,
           dryRun: agentmailDryRun,
           safeSenderEmails,
+          ownerName: env.XENA_OWNER_NAME,
         },
       ],
       signalArgs: [signalPayload] as any,
@@ -1130,8 +1126,6 @@ async function main() {
       return reply.code(400).send({ error: "missing workflowType query parameter" });
     }
     const workflowType = normalizeWorkflowTypeKey(workflowTypeRaw);
-    // Dynamically reload routes from registry so hot-updated routing metadata takes effect
-    // without a process restart.
     const currentManusRoutes = await getManusWebhookRoutes();
     const route = currentManusRoutes.get(workflowType);
     if (!route) {
@@ -1193,6 +1187,7 @@ async function main() {
           recipientEmail: env.XENA_OWNER_EMAIL,
           dryRun: agentmailDryRun,
           safeSenderEmails,
+          ownerName: env.XENA_OWNER_NAME,
         },
       ];
     }

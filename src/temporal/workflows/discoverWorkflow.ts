@@ -192,7 +192,7 @@ type DiscoveryToolAdapter = (opts: DiscoveryToolAdapterArgs) => Promise<{ tail: 
 
 const DISCOVERY_TOOL_ADAPTERS: Record<string, DiscoveryToolAdapter> = {
   "tool.discovery.teddy.default": async (opts) => {
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.args.issueId}/teddy-discovery.md`;
+    const outPath = `runs/xena:${opts.args.issueId}/teddy-discovery.md`;
     return exec.execCli({
       name: "teddy",
       cwd: opts.args.project.repoPath,
@@ -202,7 +202,7 @@ const DISCOVERY_TOOL_ADAPTERS: Record<string, DiscoveryToolAdapter> = {
     });
   },
   "tool.discovery.teddy.gpt_oss": async (opts) => {
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.args.issueId}/teddy-discovery.md`;
+    const outPath = `runs/xena:${opts.args.issueId}/teddy-discovery.md`;
     return exec.execCli({
       name: "teddy-fallback",
       cwd: opts.args.project.repoPath,
@@ -212,7 +212,7 @@ const DISCOVERY_TOOL_ADAPTERS: Record<string, DiscoveryToolAdapter> = {
     });
   },
   "tool.discovery.codex.exec": async (opts) => {
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.args.issueId}/codex-discovery.last.md`;
+    const outPath = `runs/xena:${opts.args.issueId}/codex-discovery.last.md`;
     return exec.execCli({
       name: "codex-discovery-fallback",
       cwd: opts.args.project.repoPath,
@@ -288,7 +288,7 @@ export async function discoverWorkflow(args: DiscoverArgs): Promise<void> {
 
   if (!patched("discover-strategy-matrix-v1")) {
     // Legacy path kept for replay safety on in-flight histories.
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${args.issueId}/teddy-discovery.md`;
+    const outPath = `runs/xena:${args.issueId}/teddy-discovery.md`;
     try {
       out = await exec.execCli({
         name: "teddy",
@@ -338,7 +338,7 @@ export async function discoverWorkflow(args: DiscoverArgs): Promise<void> {
           memory,
         });
 
-        const codexOutPath = `/Users/ava/xena 2p0/runs/xena:${args.issueId}/codex-discovery.last.md`;
+        const codexOutPath = `runs/xena:${args.issueId}/codex-discovery.last.md`;
         try {
           out = await exec.execCli({
             name: "codex-discovery-fallback",

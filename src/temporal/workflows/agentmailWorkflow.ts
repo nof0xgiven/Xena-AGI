@@ -25,6 +25,7 @@ type AgentmailWorkflowArgs = {
   recipientEmail?: string;
   dryRun?: boolean;
   safeSenderEmails?: string[];
+  ownerName?: string;
 };
 
 type MetaActivities = Pick<
@@ -233,6 +234,9 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
   const issueIdentifier = `EMAIL-${args.projectKey.toUpperCase()}`;
   const dryRun = args.dryRun === true;
   const safeSenderEmails = resolveSafeSenderList(args.safeSenderEmails);
+  const ownerNamePattern = args.ownerName
+    ? new RegExp(`\\b${args.ownerName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i")
+    : null;
   const pendingEvents: AgentmailEventSignal[] = [];
   const pendingManusEvents: ManusEventSignal[] = [];
   const pendingResearchTasks = new Map<string, PendingResearchTask>();
@@ -405,7 +409,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
     }
 
     if (!isSafeSenderEmail(fromEmail, safeSenderEmails)) {
-      const claimedByName = /\bmark\b/i.test(compact(event.fromName));
+      const claimedByName = ownerNamePattern ? ownerNamePattern.test(compact(event.fromName)) : false;
       await meta.mem0Add({
         projectKey: args.projectKey,
         issueIdentifier,
@@ -416,7 +420,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
           `message_id: ${event.messageId ?? "n/a"}`,
           `from_email: ${fromEmail}`,
           `from_name: ${compact(event.fromName) || "n/a"}`,
-          `claimed_identity_mark: ${claimedByName}`,
+          `claimed_identity_owner: ${claimedByName}`,
           "action: ignored_unsafe_sender",
           `allowed_senders: ${safeSenderEmails.join(", ")}`,
           `captured_at: ${tickIso}`,
@@ -693,7 +697,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
     }
 
     if (!isSafeSenderEmail(fromEmail, safeSenderEmails)) {
-      const claimedByName = /\bmark\b/i.test(compact(event.fromName));
+      const claimedByName = ownerNamePattern ? ownerNamePattern.test(compact(event.fromName)) : false;
       await meta.mem0Add({
         projectKey: args.projectKey,
         issueIdentifier,
@@ -705,7 +709,7 @@ export async function agentmailWorkflow(args: AgentmailWorkflowArgs): Promise<vo
           `message_id: ${event.messageId ?? "n/a"}`,
           `from_email: ${fromEmail}`,
           `from_name: ${compact(event.fromName) || "n/a"}`,
-          `claimed_identity_mark: ${claimedByName}`,
+          `claimed_identity_owner: ${claimedByName}`,
           "action: ignored_unsafe_sender",
           `allowed_senders: ${safeSenderEmails.join(", ")}`,
           `captured_at: ${tickIso}`,

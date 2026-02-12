@@ -416,7 +416,6 @@ export function buildExecutionPlan(input: BuildExecutionPlanInput): ExecutionPla
     explicitCapabilities.length > 0
       ? explicitCapabilities
       : normalizeCapabilities([...(INTENT_DEFAULT_CAPABILITIES[intent.type] ?? [])]);
-  // Replace the intent's requiredCapabilities with the effective set
   const effectiveIntent: OperatorIntent = {
     ...intent,
     requiredCapabilities: effectiveCapabilities,

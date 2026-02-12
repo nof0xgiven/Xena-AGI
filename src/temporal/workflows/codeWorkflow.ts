@@ -257,7 +257,7 @@ async function buildCoderPrompt(opts: {
   priorFailures: readonly CodeAttemptFailure[];
 }): Promise<string> {
   const basePrompt = await meta.renderPromptTemplate({
-    templatePath: "/Users/ava/xena 2p0/docs/coder.md",
+    templatePath: "docs/coder.md",
     variables: {
       plan: opts.plan,
       workspaceRules: "",
@@ -314,7 +314,7 @@ const CODE_TOOL_ADAPTERS: Record<string, CodeToolAdapter> = {
     });
   },
   "tool.code.teddy.exec": async (opts) => {
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/teddy-code.last.md`;
+    const outPath = `runs/xena:${opts.issueId}/teddy-code.last.md`;
     await long.execCli({
       name: "teddy-code",
       cwd: opts.worktreePath,
@@ -380,7 +380,7 @@ type ReviewToolAdapter = (opts: ReviewToolAdapterArgs) => Promise<string>;
 
 const REVIEW_TOOL_ADAPTERS: Record<string, ReviewToolAdapter> = {
   "tool.review.codex.review": async (opts) => {
-    const reviewLastPath = `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/${opts.strategyId}-${opts.attempt}.last.md`;
+    const reviewLastPath = `runs/xena:${opts.issueId}/${opts.strategyId}-${opts.attempt}.last.md`;
     const review = await long.execCli({
       name: `codex-review-${opts.strategyId}-${opts.attempt}`,
       cwd: opts.worktreePath,
@@ -399,7 +399,7 @@ const REVIEW_TOOL_ADAPTERS: Record<string, ReviewToolAdapter> = {
       issueIdentifier: opts.issueIdentifier,
       issueTitle: opts.issueTitle,
     });
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/teddy-review-${opts.attempt}.last.md`;
+    const outPath = `runs/xena:${opts.issueId}/teddy-review-${opts.attempt}.last.md`;
     const review = await long.execCli({
       name: `teddy-review-${opts.attempt}`,
       cwd: opts.worktreePath,
@@ -474,7 +474,7 @@ const REVISION_TOOL_ADAPTERS: Record<string, RevisionToolAdapter> = {
     });
   },
   "tool.review.teddy.revision": async (opts) => {
-    const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/teddy-revision-${opts.revisionAttempt}.last.md`;
+    const outPath = `runs/xena:${opts.issueId}/teddy-revision-${opts.revisionAttempt}.last.md`;
     await long.execCli({
       name: `teddy-revision-${opts.revisionAttempt}`,
       cwd: opts.worktreePath,
@@ -529,6 +529,7 @@ async function executeRevisionStrategy(opts: {
 export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> {
   try {
     const issue = await meta.linearGetIssue({ issueId: args.issueId });
+    const ownerTag = await meta.getOwnerTag();
     const memory = await meta.mem0Search({
       projectKey: args.project.projectKey,
       issueIdentifier: issue.identifier,
@@ -728,7 +729,7 @@ export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> 
     let reviewBlockedReason: string | null = null;
 
     if (!patched("review-strategy-matrix-v1")) {
-      const reviewLastPath = `/Users/ava/xena 2p0/runs/xena:${args.issueId}/codex-review.last.md`;
+      const reviewLastPath = `runs/xena:${args.issueId}/codex-review.last.md`;
       let review = await long.execCli({
         name: "codex-review",
         cwd: wt.worktreePath,
@@ -741,7 +742,7 @@ export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> 
       while (hasP0orP1(reviewText) && reviewAttempts < 3) {
         reviewAttempts += 1;
         const revisionPrompt = await meta.renderPromptTemplate({
-          templatePath: "/Users/ava/xena 2p0/docs/revision.md",
+          templatePath: "docs/revision.md",
           variables: {
             originalTask: `${issue.identifier} ${issue.title}`,
             pathToFile: "",
@@ -800,7 +801,7 @@ export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> 
             reviewAttempts += 1;
 
             const revisionPrompt = await meta.renderPromptTemplate({
-              templatePath: "/Users/ava/xena 2p0/docs/revision.md",
+              templatePath: "docs/revision.md",
               variables: {
                 originalTask: `${issue.identifier} ${issue.title}`,
                 pathToFile: "",
@@ -922,7 +923,7 @@ export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> 
         body:
           `${blockedSummary}\n\n` +
           `Next step: a human should review and decide how to proceed.\n\n` +
-          `Mark: https://linear.app/kahunas/profiles/mark`,
+          `${ownerTag}`,
       });
 
       await meta.mem0Add({
@@ -1018,6 +1019,7 @@ export async function codeWorkflow(args: CodeArgs): Promise<CodeWorkflowResult> 
             "domain: coding",
             `selected_strategy: ${matrixLearning.selectedStrategy}`,
             `selected_tool_id: ${matrixLearning.selectedToolId}`,
+            `selected_skill_id: ${selectedPlaybookId}`,
             `trigger_error_kinds: ${matrixLearning.triggerErrorKinds.join(", ")}`,
             `strategy_path: ${matrixLearning.strategyPath.join(" -> ")}`,
             `attempts: ${matrixLearning.attempts}`,

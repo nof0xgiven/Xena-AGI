@@ -23,6 +23,25 @@ type ExecCliArgs = {
   lastMessagePath?: string;
 };
 
+function getXenaRoot(): string {
+  return process.env.XENA_ROOT || process.cwd();
+}
+
+function resolveAgainstXenaRoot(filePath: string): string {
+  if (path.isAbsolute(filePath)) return filePath;
+  return path.resolve(getXenaRoot(), filePath);
+}
+
+function resolveOutputArgs(args: string[]): string[] {
+  const resolved = [...args];
+  for (let i = 0; i < resolved.length - 1; i++) {
+    if (resolved[i] === "-o" && resolved[i + 1] && !path.isAbsolute(resolved[i + 1])) {
+      resolved[i + 1] = resolveAgainstXenaRoot(resolved[i + 1]);
+    }
+  }
+  return resolved;
+}
+
 function tailAppend(current: string, chunk: string, max = 20000): string {
   const next = current + chunk;
   return next.length > max ? next.slice(next.length - max) : next;
@@ -48,16 +67,21 @@ export async function execCli(opts: ExecCliArgs): Promise<ExecResult> {
   const logPath = path.join(runDir, `${opts.name}.${stamp}.log`);
   const fh = await fs.open(logPath, "a");
 
+  const resolvedLastMessagePath = opts.lastMessagePath
+    ? resolveAgainstXenaRoot(opts.lastMessagePath)
+    : undefined;
+  const resolvedArgs = resolveOutputArgs(opts.args);
+
   let tail = "";
-  if (opts.lastMessagePath) {
+  if (resolvedLastMessagePath) {
     // Best-effort cleanup so stale content doesn't get reused.
     try {
-      await fs.rm(opts.lastMessagePath);
+      await fs.rm(resolvedLastMessagePath);
     } catch {
       // ignore
     }
   }
-  const child = spawn(opts.cmd, opts.args, {
+  const child = spawn(opts.cmd, resolvedArgs, {
     cwd: opts.cwd,
     env: { ...process.env, ...(opts.env ?? {}) },
     stdio: [opts.stdin != null ? "pipe" : "ignore", "pipe", "pipe"],
@@ -101,10 +125,10 @@ export async function execCli(opts: ExecCliArgs): Promise<ExecResult> {
   }
 
   let lastMessage: string | undefined;
-  if (opts.lastMessagePath) {
+  if (resolvedLastMessagePath) {
     try {
       // Large outputs are still chunked at posting time; we just sanitize here.
-      const raw = await fs.readFile(opts.lastMessagePath, "utf8");
+      const raw = await fs.readFile(resolvedLastMessagePath, "utf8");
       const cleaned = sanitizeForLinear(raw).trim();
       if (cleaned.length > 0) lastMessage = cleaned;
     } catch {

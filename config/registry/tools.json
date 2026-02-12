@@ -495,6 +495,13 @@
             "signalName": "manusEvent",
             "dispatchMode": "signalWithStart",
             "bootstrap": "agentmail"
+          },
+          {
+            "workflowType": "operator",
+            "workflowName": "operatorWorkflow",
+            "signalName": "manusEvent",
+            "dispatchMode": "signalOnly",
+            "bootstrap": "none"
           }
         ]
       },

@@ -333,7 +333,7 @@ async function executeDirectPlan(opts: {
   taskDescription: string;
 }): Promise<StrategyResult> {
   const prompt = await meta.renderPromptTemplate({
-    templatePath: "/Users/ava/xena 2p0/docs/planner.md",
+    templatePath: "docs/planner.md",
     variables: {
       taskDescription: opts.taskDescription,
     },
@@ -342,7 +342,7 @@ async function executeDirectPlan(opts: {
     name: "codex-planner",
     cwd: opts.repoPath,
     prompt,
-    outPath: `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/codex-planner.last.md`,
+    outPath: `runs/xena:${opts.issueId}/codex-planner.last.md`,
   });
   return {
     markdown,
@@ -357,12 +357,12 @@ async function executeTeddyDirectPlan(opts: {
   taskDescription: string;
 }): Promise<StrategyResult> {
   const prompt = await meta.renderPromptTemplate({
-    templatePath: "/Users/ava/xena 2p0/docs/planner.md",
+    templatePath: "docs/planner.md",
     variables: {
       taskDescription: opts.taskDescription,
     },
   });
-  const outPath = `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/teddy-planner.last.md`;
+  const outPath = `runs/xena:${opts.issueId}/teddy-planner.last.md`;
   const out = await exec.execCli({
     name: "teddy-planner",
     cwd: opts.repoPath,
@@ -391,7 +391,7 @@ async function executeRecursivePlan(opts: {
   }
 
   const decomposePrompt = await meta.renderPromptTemplate({
-    templatePath: "/Users/ava/xena 2p0/docs/planner.recursive.decompose.md",
+    templatePath: "docs/planner.recursive.decompose.md",
     variables: {
       taskDescription: opts.taskDescription,
       maxBranches: String(MAX_RECURSIVE_BRANCHES),
@@ -403,7 +403,7 @@ async function executeRecursivePlan(opts: {
     name: "codex-planner-recursive-decompose",
     cwd: opts.repoPath,
     prompt: decomposePrompt,
-    outPath: `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/codex-planner.recursive.decompose.last.md`,
+    outPath: `runs/xena:${opts.issueId}/codex-planner.recursive.decompose.last.md`,
   });
   const decomposition = parseRecursiveDecomposition(decompositionRaw);
 
@@ -413,7 +413,7 @@ async function executeRecursivePlan(opts: {
   for (let i = 0; i < decomposition.subproblems.length && i < MAX_RECURSIVE_BRANCHES; i += 1) {
     const subproblem = decomposition.subproblems[i];
     const subplanPrompt = await meta.renderPromptTemplate({
-      templatePath: "/Users/ava/xena 2p0/docs/planner.recursive.subplan.md",
+      templatePath: "docs/planner.recursive.subplan.md",
       variables: {
         taskDescription: opts.taskDescription,
         objective: decomposition.objective,
@@ -428,7 +428,7 @@ async function executeRecursivePlan(opts: {
         name: `codex-planner-recursive-subplan-${i + 1}`,
         cwd: opts.repoPath,
         prompt: subplanPrompt,
-        outPath: `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/codex-planner.recursive.subplan.${i + 1}.last.md`,
+        outPath: `runs/xena:${opts.issueId}/codex-planner.recursive.subplan.${i + 1}.last.md`,
       });
       if (!subplan || subplan.length < 60) {
         throw new Error("Subplan output was too short.");
@@ -449,7 +449,7 @@ async function executeRecursivePlan(opts: {
   }
 
   const synthPrompt = await meta.renderPromptTemplate({
-    templatePath: "/Users/ava/xena 2p0/docs/planner.recursive.synthesize.md",
+    templatePath: "docs/planner.recursive.synthesize.md",
     variables: {
       taskDescription: opts.taskDescription,
       objective: decomposition.objective,
@@ -469,7 +469,7 @@ async function executeRecursivePlan(opts: {
     name: "codex-planner-recursive-synthesize",
     cwd: opts.repoPath,
     prompt: synthPrompt,
-    outPath: `/Users/ava/xena 2p0/runs/xena:${opts.issueId}/codex-planner.recursive.synthesize.last.md`,
+    outPath: `runs/xena:${opts.issueId}/codex-planner.recursive.synthesize.last.md`,
   });
 
   if (!markdown) {

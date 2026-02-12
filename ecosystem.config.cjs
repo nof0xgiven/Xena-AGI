@@ -1,4 +1,6 @@
-const dotenvPath = '/Users/ava/xena 2p0/.env';
+const path = require('path');
+const projectRoot = path.resolve(__dirname);
+const dotenvPath = path.join(projectRoot, '.env');
 const envVars = {};
 try {
   require('fs')
@@ -15,7 +17,7 @@ module.exports = {
     {
       name: 'xena2p0-server',
       script: './dist/server/index.js',
-      cwd: '/Users/ava/xena 2p0',
+      cwd: projectRoot,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -24,13 +26,14 @@ module.exports = {
       merge_logs: true,
       env: {
         NODE_ENV: 'production',
+        XENA_ROOT: projectRoot,
         ...envVars,
       },
     },
     {
       name: 'xena2p0-worker',
       script: './dist/temporal/worker.js',
-      cwd: '/Users/ava/xena 2p0',
+      cwd: projectRoot,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -39,13 +42,14 @@ module.exports = {
       merge_logs: true,
       env: {
         NODE_ENV: 'production',
+        XENA_ROOT: projectRoot,
         ...envVars,
       },
     },
     {
       name: 'xena2p0-ingress',
       script: './dist/ingress/index.js',
-      cwd: '/Users/ava/xena 2p0',
+      cwd: projectRoot,
       exec_mode: 'fork',
       instances: 1,
       autorestart: true,
@@ -54,6 +58,7 @@ module.exports = {
       merge_logs: true,
       env: {
         NODE_ENV: 'production',
+        XENA_ROOT: projectRoot,
         ...envVars,
       },
     },

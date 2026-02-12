@@ -7,7 +7,7 @@ export type SandboxProvisionResult =
       ok: true;
       sandboxId: string;
       sandboxUrl: string;
-      bootMode: "kahunas" | "generic";
+      bootMode: "monorepo" | "generic";
     }
   | {
       ok: false;
@@ -95,44 +95,45 @@ export async function sandboxProvisionFromPr(opts: {
   try {
     sandbox = await Sandbox.create(createArgs);
 
-    // Try the kahunas boot sequence first.
-    try {
-      await runChecked(sandbox, {
-        cmd: "npm",
-        args: ["install", "-g", "pnpm@10.14.0"],
-        sudo: true,
-      });
-      await runChecked(sandbox, {
-        cmd: "pnpm",
-        args: ["install"],
-        cwd: "/vercel/sandbox",
-      });
+    const sandboxBootPackages = (process.env.XENA_SANDBOX_BOOT_PACKAGES ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-      await sandbox.runCommand({
-        cmd: "pnpm",
-        args: ["--filter", "@kahunas/tenant-api", "dev"],
-        cwd: "/vercel/sandbox",
-        detached: true,
-        env: { NODE_ENV: "development" },
-      });
-      await sandbox.runCommand({
-        cmd: "pnpm",
-        args: ["--filter", "@kahunas/tenant", "dev"],
-        cwd: "/vercel/sandbox",
-        detached: true,
-      });
+    if (sandboxBootPackages.length > 0) {
+      try {
+        await runChecked(sandbox, {
+          cmd: "npm",
+          args: ["install", "-g", "pnpm@10.14.0"],
+          sudo: true,
+        });
+        await runChecked(sandbox, {
+          cmd: "pnpm",
+          args: ["install"],
+          cwd: "/vercel/sandbox",
+        });
 
-      return {
-        ok: true,
-        sandboxId: sandbox.sandboxId,
-        sandboxUrl: sandbox.domain(3000),
-        bootMode: "kahunas",
-      };
-    } catch (kahunasErr: any) {
-      logger.warn({ err: kahunasErr }, "Kahunas sandbox boot failed, falling back to generic boot");
+        for (const pkg of sandboxBootPackages) {
+          await sandbox.runCommand({
+            cmd: "pnpm",
+            args: ["--filter", pkg, "dev"],
+            cwd: "/vercel/sandbox",
+            detached: true,
+            env: { NODE_ENV: "development" },
+          });
+        }
+
+        return {
+          ok: true,
+          sandboxId: sandbox.sandboxId,
+          sandboxUrl: sandbox.domain(3000),
+          bootMode: "monorepo",
+        };
+      } catch (monorepoErr: any) {
+        logger.warn({ err: monorepoErr }, "Monorepo sandbox boot failed, falling back to generic boot");
+      }
     }
 
-    // Generic fallback for frontend projects that only need one dev server.
     await runChecked(sandbox, {
       cmd: "npm",
       args: ["install"],

@@ -1,4 +1,4 @@
-export const DEFAULT_SAFE_SENDER_EMAILS = ["mark@kahunas.io", "mark@markfox.me"] as const;
+export const DEFAULT_SAFE_SENDER_EMAILS = [] as const;
 
 function normalizeEmail(value: string | null | undefined): string | null {
   if (!value) return null;

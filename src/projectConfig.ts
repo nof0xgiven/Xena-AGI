@@ -14,9 +14,14 @@ const ProjectsSchema = z.array(ProjectSchema);
 
 export type ProjectConfig = z.infer<typeof ProjectSchema>;
 
+function expandEnvVars(value: string): string {
+  return value.replace(/\$([A-Z_][A-Z0-9_]*)/g, (_match, name) => process.env[name] ?? "");
+}
+
 export async function loadProjectsConfig(): Promise<ProjectConfig[]> {
   const p = path.resolve(process.cwd(), "config/projects.json");
-  const raw = await fs.readFile(p, "utf8");
+  let raw = await fs.readFile(p, "utf8");
+  raw = expandEnvVars(raw);
   const parsed = ProjectsSchema.safeParse(JSON.parse(raw));
   if (!parsed.success) {
     throw new Error(`Invalid config/projects.json: ${parsed.error.message}`);

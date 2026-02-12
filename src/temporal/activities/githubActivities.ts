@@ -40,7 +40,6 @@ export async function gitGetOriginRepoSlug(opts: { repoPath: string }): Promise<
 }
 
 export async function gitGetDefaultBaseBranch(opts: { repoPath: string }): Promise<string> {
-  // Prefer origin/HEAD symbolic ref.
   try {
     const out = await execCli({
       name: "git-origin-head",
@@ -55,7 +54,6 @@ export async function gitGetDefaultBaseBranch(opts: { repoPath: string }): Promi
     // fall through
   }
 
-  // Fallback: try parsing remote show origin output.
   try {
     const out = await execCli({
       name: "git-remote-show",
@@ -159,7 +157,6 @@ export async function ghFindPrUrlForBranch(opts: {
       args: ["pr", "view", "--repo", opts.repoSlug, "--head", opts.branchName, "--json", "url"],
       env: token ? { GH_TOKEN: token } : undefined,
     });
-    // Output is JSON; keep parsing minimal.
     const m = out.tail.match(/"url"\s*:\s*"([^"]+)"/);
     return m ? m[1] : null;
   } catch {
@@ -206,7 +203,6 @@ export async function ghCreatePr(opts: {
     env: token ? { GH_TOKEN: token } : undefined,
   });
 
-  // gh prints the PR URL on success; extract the first GitHub PR URL we see.
   const m = out.tail.match(/https:\/\/github\.com\/[^\s]+\/pull\/\d+/);
   if (!m) {
     throw new Error(`Unable to extract PR URL from gh output.\n\nTail:\n${out.tail}`);

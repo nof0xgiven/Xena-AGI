@@ -134,7 +134,6 @@ export async function mem0SearchEntries(opts: {
     fields: ["memory", "metadata", "created_at", "updated_at", "user_id"],
   };
 
-  // Mem0 uses v2 for search.
   // Use trailing slash to avoid 301/302 redirects that can downgrade POST -> GET.
   const res = await mem0FetchJson({
     mem0: opts.mem0,
@@ -240,7 +239,6 @@ export async function mem0Add(opts: {
     payload.run_id = opts.runId;
   }
 
-  // Mem0 uses v1 for add.
   await mem0FetchJson({
     mem0: opts.mem0,
     path: "/v1/memories/",

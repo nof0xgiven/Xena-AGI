@@ -309,13 +309,16 @@ Not implemented yet:
 - `XENA_OWNER_EMAIL` (default recipient when no explicit email target is provided)
 - `XENA_AGENTMAIL_INTERVAL_MINUTES` (`0` disables periodic email digest ticks; >0 enables cadence)
 - `XENA_AGENTMAIL_DRY_RUN` (`true|false`; classify/process inbound but skip outbound sends)
-- `XENA_SAFE_SENDER_EMAILS` (critical sender allowlist for identity trust; defaults to `mark@kahunas.io,mark@markfox.me`)
+- `XENA_SAFE_SENDER_EMAILS` (critical sender allowlist for identity trust; no default — must be configured)
+- `XENA_OWNER_NAME` (owner display name used in teammate handoff comments)
+- `XENA_OWNER_PROFILE_URL` (owner Linear profile URL used in teammate handoff comments)
+- `XENA_ROOT` (project root path; defaults to `process.cwd()`)
 - `XENA_PUBLIC_BASE_URL` (preferred public base URL for Manus webhook callbacks, e.g. your ngrok URL)
 - `XENA_INTERNAL_BASE_URL` (fallback internal base URL for local proxying)
 
 Sender identity guard:
 - Inbound AgentMail actions are executed only when sender email is in `XENA_SAFE_SENDER_EMAILS`.
-- Anyone else (including messages claiming to be Mark by display name) is ignored and logged as `agentmail_sender_ignored`.
+- Anyone else (including messages claiming to be the owner by display name) is ignored and logged as `agentmail_sender_ignored`.
 
 ## Local Ops
 

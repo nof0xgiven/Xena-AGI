@@ -46,16 +46,13 @@ export async function linearEnsureInProgress(opts: { issueId: string }): Promise
   const stateType = state?.type as string | undefined; // "unstarted" | "started" | "completed" | "canceled"
   const stateName = (state?.name as string | undefined) ?? "";
 
-  // Don't move completed/canceled work.
   if (stateType === "completed" || stateType === "canceled") return { changed: false };
-  // If already started, don't change.
   if (stateType === "started") return { changed: false };
   if (/in progress|in development/i.test(stateName)) return { changed: false };
 
   const team = await issue.team;
   if (!team) throw new Error(`Linear issue missing team: ${opts.issueId}`);
 
-  // Choose the best "started" state for the team.
   const statesConn = await (team as any).states({ first: 50 });
   const states = (statesConn?.nodes as any[]) ?? [];
   const started = states.filter((s) => s?.type === "started");

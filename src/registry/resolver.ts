@@ -284,10 +284,8 @@ function findSupplementalTools(
     supplemental.push({ tool, coverage: providedMissing.length });
   }
 
-  // Sort by coverage descending to minimize the number of supplemental tools needed
   supplemental.sort((a, b) => b.coverage - a.coverage);
 
-  // Greedily select tools until all missing capabilities are covered
   const selected: ToolDefinition[] = [];
   const remaining = new Set(missingCapabilities);
   for (const { tool } of supplemental) {
@@ -377,9 +375,6 @@ function evaluateCandidate(bundle: RegistryBundle, request: ResolutionRequest, a
   ]);
   const missingCapabilities = requiredCapabilities.filter((capability) => !capabilities.has(capability));
 
-  // Dynamic composition: when the agent's fixed tools/resources don't cover all required
-  // capabilities, scan the full registry for supplemental tools/resources that can fill the gaps.
-  // This enables newly registered capabilities to be usable without manually wiring into agents.
   if (missingCapabilities.length > 0) {
     const existingToolIds = new Set(tools.map((t) => t.id));
     const existingResourceIds = new Set(resources.map((r) => r.id));
@@ -400,7 +395,6 @@ function evaluateCandidate(bundle: RegistryBundle, request: ResolutionRequest, a
     );
 
     if (supplementalTools.length > 0 || supplementalResources.length > 0) {
-      // Re-validate agent constraints against supplemental additions
       if (agent.constraints.requireDeterministicTools && supplementalTools.some((tool) => !tool.deterministic)) {
         return null;
       }
@@ -411,7 +405,6 @@ function evaluateCandidate(bundle: RegistryBundle, request: ResolutionRequest, a
       capabilities = collectCapabilities(tools, resources);
     }
 
-    // Re-check after augmentation
     const stillMissing = requiredCapabilities.filter((capability) => !capabilities.has(capability));
     if (stillMissing.length > 0) {
       return null;

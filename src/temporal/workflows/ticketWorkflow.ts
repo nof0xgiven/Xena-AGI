@@ -157,6 +157,8 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
   setHandler(statusQuery, () => ({ ...status }));
 
   const issue = await meta.linearGetIssue({ issueId: args.issueId });
+  const ownerTag = await meta.getOwnerTag();
+
   // Keep the ticket in a "started" state while Xena is working.
   // Use a patch marker so existing workflow histories don't become nondeterministic.
   if (patched("linear-ensure-in-progress")) {
@@ -240,7 +242,6 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
               body: `Continuing.`,
             });
           }
-          // If we're being explicitly nudged, ensure the ticket is moved into a started state.
           if (patched("linear-ensure-in-progress-on-continue")) {
             try {
               await meta.linearEnsureInProgress({ issueId: args.issueId });
@@ -266,7 +267,6 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             issueId: args.issueId,
             body: `Sandbox URL: ${url}`,
           });
-          // If we were blocked waiting for sandbox, resume automatically.
           if (status.stage === "blocked" && status.resumeStage === "waiting_sandbox") {
             status.stage = "waiting_sandbox";
             status.blockedReason = undefined;
@@ -284,7 +284,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
               issueId: args.issueId,
               body:
                 `Smoke: pass.\n\n` +
-                `Mark: https://linear.app/kahunas/profiles/mark`,
+                `${ownerTag}`,
             });
             continue;
           }
@@ -306,14 +306,13 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
                 body:
                   `Smoke has failed ${status.smokeAttempts} times.\n\n` +
                   `Per scope: human review required.\n\n` +
-                  `Mark: https://linear.app/kahunas/profiles/mark`,
+                  `${ownerTag}`,
               });
             } else {
               await meta.linearPostComment({
                 issueId: args.issueId,
                 body: `Smoke failed. Looping back to code (attempt ${status.smokeAttempts}/2).`,
               });
-              // Auto-loop back to code on first smoke failure.
               status.stage = "coding";
               status.blockedReason = undefined;
               status.resumeStage = undefined;
@@ -436,7 +435,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             reason: `Discover failed: ${msg}`,
             resumeStage: "discovering",
             header: `[xena][discover] Blocked`,
-            body: `${msg}\n\nTagging Mark: https://linear.app/kahunas/profiles/mark`,
+            body: `${msg}\n\n${ownerTag ? `Tagging ${ownerTag}` : ""}`,
           });
           continue;
         }
@@ -452,7 +451,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
           reason: `Plan failed: ${msg}`,
           resumeStage: "planning",
           header: `[xena][plan] Blocked`,
-          body: `${msg}\n\nTagging Mark: https://linear.app/kahunas/profiles/mark`,
+          body: `${msg}\n\n${ownerTag ? `Tagging ${ownerTag}` : ""}`,
         });
         continue;
       }
@@ -483,7 +482,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
           reason: `Code failed: ${msg}`,
           resumeStage: "coding",
           header: `[xena][code] Blocked`,
-          body: `${msg}\n\nTagging Mark: https://linear.app/kahunas/profiles/mark`,
+          body: `${msg}\n\n${ownerTag ? `Tagging ${ownerTag}` : ""}`,
         });
         continue;
       }
@@ -551,7 +550,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
           reason: `PR creation failed: ${msg}`,
           resumeStage: "creating_pr",
           header: `[xena][pr] Blocked`,
-          body: `${msg}\n\nTagging Mark: https://linear.app/kahunas/profiles/mark`,
+          body: `${msg}\n\n${ownerTag ? `Tagging ${ownerTag}` : ""}`,
         });
         continue;
       }
@@ -616,9 +615,8 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             body:
               `Timed out waiting for a sandbox URL.\n\n` +
               `Paste the sandbox URL in a comment once you have it.\n\n` +
-              `Mark: https://linear.app/kahunas/profiles/mark`,
+              `${ownerTag}`,
           });
-          // If resumed, keep waiting for sandbox.
           status.stage = "waiting_sandbox";
           continue;
         }
@@ -635,7 +633,6 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
 
       // SMOKE RESULT
       status.stage = "waiting_smoke";
-      // If Hyperbrowser is configured, run an automated smoke against the sandbox URL (best-effort).
       if (patched("hyperbrowser-auto-smoke") && status.sandboxUrl) {
         const hb = await qa.hyperbrowserSmoke({ url: status.sandboxUrl, timeoutMs: 5 * 60_000 });
         if (hb.ok) {
@@ -655,7 +652,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             status.stage = "coding";
             status.sandboxUrl = undefined;
           } else {
-            // We'll hit the >=2 gate below to block and tag Mark.
+            // We'll hit the >=2 gate below to block and tag the owner.
             status.stage = "coding";
             status.sandboxUrl = undefined;
           }
@@ -669,7 +666,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             `Handoff.\n` +
             `- PR: ${status.prUrl ?? "(none)"}\n` +
             `- Sandbox: ${status.sandboxUrl ?? "(none)"}\n\n` +
-            `Mark: https://linear.app/kahunas/profiles/mark`,
+            `${ownerTag}`,
         });
         status.stage = "completed";
         continue;
@@ -718,7 +715,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
                   status.stage = "coding";
                   status.sandboxUrl = undefined;
                 } else {
-                  // We'll hit the >=2 gate below to block and tag Mark.
+                  // We'll hit the >=2 gate below to block and tag the owner.
                   status.stage = "coding";
                   status.sandboxUrl = undefined;
                 }
@@ -751,7 +748,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
               status.stage = "coding";
               status.sandboxUrl = undefined;
             } else {
-              // We'll hit the >=2 gate below to block and tag Mark.
+              // We'll hit the >=2 gate below to block and tag the owner.
               status.stage = "coding";
               status.sandboxUrl = undefined;
             }
@@ -769,7 +766,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             body:
               `Timed out waiting for smoke result.\n\n` +
               `Reply with “smoke pass” or “smoke fail <details>”.\n\n` +
-              `Mark: https://linear.app/kahunas/profiles/mark`,
+              `${ownerTag}`,
           });
           status.stage = "waiting_smoke";
           continue;
@@ -778,7 +775,6 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
         await sleep("30 seconds");
       }
 
-      // If we hit 2 smoke failures, flag Mark and stop auto-looping unless operator continues.
       if (status.smokeAttempts >= 2 && status.stage !== "handoff") {
         await blockAndWait({
           reason: `Smoke failed ${status.smokeAttempts} times (2 allowed). Human review required.`,
@@ -787,7 +783,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
           body:
             `Smoke has failed ${status.smokeAttempts} times.\n\n` +
             `Per scope: human verification required.\n\n` +
-            `Mark: https://linear.app/kahunas/profiles/mark`,
+            `${ownerTag}`,
         });
         continue;
       }
@@ -799,7 +795,7 @@ export async function ticketWorkflow(args: TicketArgs): Promise<void> {
             `Handoff.\n` +
             `- PR: ${status.prUrl ?? "(none)"}\n` +
             `- Sandbox: ${status.sandboxUrl ?? "(none)"}\n\n` +
-            `Mark: https://linear.app/kahunas/profiles/mark`,
+            `${ownerTag}`,
         });
         status.stage = "completed";
       }

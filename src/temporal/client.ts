@@ -8,7 +8,6 @@ export async function createTemporalClient(env: TemporalEnv): Promise<Client> {
     namespace: env.TEMPORAL_NAMESPACE,
   });
 
-  // Fail fast with a clear error if the namespace isn't registered.
   try {
     await client.workflowService.describeNamespace({
       namespace: env.TEMPORAL_NAMESPACE,

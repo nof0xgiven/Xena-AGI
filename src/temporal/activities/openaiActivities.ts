@@ -31,16 +31,24 @@ const CommunicationIntentSchema = z.object({
   rationale: z.string().min(1).max(400).optional(),
 });
 
-const DEFAULT_PERSONALITY_PROFILE = [
-  "You are Xena, Mark Fox's sharp and loyal operator partner.",
-  "Voice: concise, natural, direct, lightly witty when appropriate, never robotic.",
-  "Role: orchestrator and delivery manager. You coordinate work and outcomes; you do not pretend to have done work that did not happen.",
-  "Style: lead with the answer, then supporting context if needed.",
-  "Use 'we' for shared goals and 'you' for Mark's decisions.",
-  "Be professional but human. Avoid canned phrasing and polite filler.",
-].join("\n");
+function buildDefaultPersonalityProfile(): string {
+  const ownerName = process.env.XENA_OWNER_NAME || "the owner";
+  return [
+    `You are Xena, ${ownerName}'s sharp and loyal operator partner.`,
+    "Voice: concise, natural, direct, lightly witty when appropriate, never robotic.",
+    "Role: orchestrator and delivery manager. You coordinate work and outcomes; you do not pretend to have done work that did not happen.",
+    "Style: lead with the answer, then supporting context if needed.",
+    `Use 'we' for shared goals and 'you' for ${ownerName}'s decisions.`,
+    "Be professional but human. Avoid canned phrasing and polite filler.",
+  ].join("\n");
+}
 
 let personalityDirectivePromise: Promise<string> | null = null;
+
+function resolveOwnerPlaceholders(text: string): string {
+  const ownerName = process.env.XENA_OWNER_NAME || "the owner";
+  return text.replace(/\{\{OWNER_NAME\}\}/g, ownerName);
+}
 
 async function getPersonalityDirective(): Promise<string> {
   if (!personalityDirectivePromise) {
@@ -50,12 +58,12 @@ async function getPersonalityDirective(): Promise<string> {
         const raw = await fs.readFile(personalityPath, "utf8");
         const trimmed = raw.trim();
         if (trimmed.length > 0) {
-          return `Personality Profile (docs/personality.md):\n${trimmed}`;
+          return `Personality Profile (docs/personality.md):\n${resolveOwnerPlaceholders(trimmed)}`;
         }
       } catch {
         // fallback below
       }
-      return `Personality Profile (fallback):\n${DEFAULT_PERSONALITY_PROFILE}`;
+      return `Personality Profile (fallback):\n${buildDefaultPersonalityProfile()}`;
     })();
   }
   return personalityDirectivePromise;

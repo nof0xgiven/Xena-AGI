@@ -469,6 +469,9 @@ export async function ticketWorkflowV2Core(args: TicketArgs): Promise<void> {
   setHandler(statusQuery, () => ({ ...status }));
 
   const issue = await meta.linearGetIssue({ issueId: args.issueId });
+  const ownerTag = await meta.getOwnerTag();
+  const ownerName = ownerTag.split(":")[0]?.trim() || "";
+  const ownerProfileUrl = ownerTag.includes(":") ? ownerTag.slice(ownerTag.indexOf(":") + 1).trim() : "";
   let userPreferences = await meta.mem0GetUserPreferences({
     projectKey: args.project.projectKey,
   });
@@ -1185,7 +1188,6 @@ export async function ticketWorkflowV2Core(args: TicketArgs): Promise<void> {
       return;
     }
 
-    // First smoke failure loops back to coding.
     status.prUrl = undefined;
     status.prNumber = undefined;
     status.prHeadBranch = undefined;
@@ -1202,7 +1204,6 @@ export async function ticketWorkflowV2Core(args: TicketArgs): Promise<void> {
   };
 
   try {
-    // Restore known PR / sandbox context from existing ticket comments.
     const recent = await meta.linearListRecentComments({ issueId: args.issueId, first: 50 });
     for (const c of recent) {
       const prUrl = extractFirstPrUrl(c.body);
@@ -1322,8 +1323,8 @@ export async function ticketWorkflowV2Core(args: TicketArgs): Promise<void> {
               {
                 prUrl: status.prUrl ?? null,
                 sandboxUrl: status.sandboxUrl ?? null,
-                owner: "Mark",
-                ownerProfile: "https://linear.app/kahunas/profiles/mark",
+                owner: ownerName,
+                ownerProfile: ownerProfileUrl,
               },
               null,
               2,
@@ -1405,7 +1406,6 @@ export async function ticketWorkflowV2Core(args: TicketArgs): Promise<void> {
         }
       }
 
-      // If we already resumed from PR, wait and continue polling.
       if (status.stage === "waiting_smoke" && status.prUrl) {
         await sleep("30 seconds");
         continue;

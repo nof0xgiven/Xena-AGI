@@ -10,12 +10,13 @@ import {
 } from "@temporalio/workflow";
 import type { ChildWorkflowHandle } from "@temporalio/workflow";
 import type * as activities from "../activities/index.js";
-import type { GithubPrSignal, LinearCommentSignal, TicketArgs, TicketWakeSignal } from "../shared.js";
+import type { GithubPrSignal, LinearCommentSignal, ManusEventSignal, TicketArgs, TicketWakeSignal } from "../shared.js";
 import {
   QUERY_OPERATOR_STATUS,
   QUERY_TICKET_STATUS,
   SIGNAL_GITHUB_PR,
   SIGNAL_LINEAR_COMMENT,
+  SIGNAL_MANUS_EVENT,
   SIGNAL_OPERATOR_CONTROL,
   SIGNAL_OPERATOR_INTENT,
   SIGNAL_TICKET_WAKE,
@@ -43,6 +44,7 @@ const signalOperatorControl = defineSignal<[
     reason?: string;
   },
 ]>(SIGNAL_OPERATOR_CONTROL);
+const signalManusEvent = defineSignal<[ManusEventSignal]>(SIGNAL_MANUS_EVENT);
 
 type MetaActivities = Pick<
   typeof activities,
@@ -54,6 +56,8 @@ type MetaActivities = Pick<
   | "mem0GetUserPreferences"
   | "mem0GetDecisionSignatures"
   | "registryBuildExecutionPlan"
+  | "researchStart"
+  | "researchFinalizeTask"
   | "telemetryAppendTrustEvent"
   | "telemetryComputeTrustSnapshot"
   | "researchRun"
@@ -280,6 +284,8 @@ export async function operatorWorkflow(args: TicketArgs): Promise<void> {
     sourceBody?: string;
   }> = [];
 
+  const pendingManusEvents: ManusEventSignal[] = [];
+
   let coreHandle: ChildWorkflowHandle<typeof ticketWorkflowV2Core> | null = null;
   let coreCompleted = false;
   let coreFailed = false;
@@ -425,6 +431,10 @@ export async function operatorWorkflow(args: TicketArgs): Promise<void> {
       coreCompleted ? "completed" : "delegated",
       coreCompleted ? "Operator resumed into completed state." : "Operator resumed delegated execution state.",
     );
+  });
+
+  setHandler(signalManusEvent, (sig) => {
+    pendingManusEvents.push(sig);
   });
 
   const issue = await meta.linearGetIssue({ issueId: args.issueId });
@@ -649,31 +659,153 @@ export async function operatorWorkflow(args: TicketArgs): Promise<void> {
       },
     });
 
-    // Route execution through resolved agent composition:
-    // The intent type from the execution plan determines the execution path.
     const resolvedIntentType = executionPlan.intent.type;
     const selectedCodingPlaybookId = executionPlan.resolution.selectedSkills[0]?.id ?? "skill.coding.lifecycle";
+    const selectedResearchPlaybookId = executionPlan.resolution.selectedSkills[0]?.id ?? "skill.research.brief";
 
     if (resolvedIntentType === "research") {
       // ── Research execution path ──────────────────────────────────────────
-      // Research-classified tickets run the research brief flow directly
-      // using the issue context, rather than delegating to the coding lifecycle.
-      setStage("researching", `Executing research intent via resolved composition (agent=${executionPlan.resolution.selectedAgent.id}).`, {
+      setStage("researching", `Executing research intent via resolved composition (agent=${executionPlan.resolution.selectedAgent.id}, playbook=${selectedResearchPlaybookId}).`, {
         selectedAgent: executionPlan.resolution.selectedAgent.id,
         intentType: "research",
+        selectedPlaybookId: selectedResearchPlaybookId,
       });
       status.researchRuns += 1;
 
-      await executeResearchBrief({
-        topic: issue.title,
-        objective: issue.description || `Create a decision-ready brief for ${issue.identifier}: ${issue.title}`,
-        agentId: executionPlan.resolution.selectedAgent.id,
-      });
+      if (selectedResearchPlaybookId === "skill.research.async_followup") {
+        // ── Async research: start Manus task with webhook, wait for signal ──
+        const topic = issue.title;
+        const objective = issue.description || `Create a decision-ready brief for ${issue.identifier}: ${issue.title}`;
+
+        await meta.linearPostComment({
+          issueId: args.issueId,
+          body: `Starting async research for "${topic}" (playbook: ${selectedResearchPlaybookId}).`,
+        });
+
+        const started = await meta.researchStart({
+          issueId: args.issueId,
+          issueIdentifier: issue.identifier,
+          topic,
+          objective,
+          cwd: args.project.repoPath,
+          audience: "Founder",
+          sourceHints: [issue.identifier, issue.title],
+          maxSources: 8,
+          workflowId: operatorWorkflowId,
+          projectKey: args.project.projectKey,
+          webhookWorkflowType: "operator",
+        });
+
+        await meta.mem0Add({
+          projectKey: args.project.projectKey,
+          issueIdentifier: issue.identifier,
+          namespace: "workflow.state",
+          content: [
+            "[operator_research_async_v1]",
+            `status: started`,
+            `task_id: ${started.taskId}`,
+            `task_url: ${started.taskUrl}`,
+            `topic: ${topic}`,
+            `playbook: ${selectedResearchPlaybookId}`,
+            `captured_at: ${new Date().toISOString()}`,
+          ].join("\n"),
+          type: "event",
+          intent: "operator_research_started",
+          stage: "researching",
+          outcome: "updated",
+          source: "workflow.operator",
+          runId: args.issueId,
+          appId: "xena",
+          agentId: executionPlan.resolution.selectedAgent.id,
+          infer: false,
+          tags: ["research", "async"],
+        });
+
+        await meta.linearPostComment({
+          issueId: args.issueId,
+          body: `Research task started via Manus.\nTask ID: ${started.taskId}\nTask URL: ${started.taskUrl}\nWaiting for completion webhook.`,
+        });
+
+        // Wait for the Manus completion signal
+        await condition(() => pendingManusEvents.length > 0);
+        const manusEvent = pendingManusEvents.shift()!;
+
+        const run = await meta.researchFinalizeTask({
+          issueId: args.issueId,
+          issueIdentifier: issue.identifier,
+          topic,
+          taskId: started.taskId,
+          sourceHints: [issue.identifier, issue.title],
+          maxSources: 8,
+        });
+
+        const briefMd = renderResearchBriefMarkdown({
+          title: run.brief.title ?? `Research brief: ${topic}`,
+          summary: run.brief.summary,
+          findings: run.brief.findings,
+          risks: run.brief.risks,
+          recommendations: run.brief.recommendations,
+          openQuestions: run.brief.openQuestions,
+          sources: run.brief.sources.map((s) => s.url),
+          invalidSourceCount: run.brief.invalidSources.length,
+          parseMode: run.parseMode,
+          warnings: run.warnings,
+        });
+
+        await meta.linearPostLongComment({
+          issueId: args.issueId,
+          header: "Research brief (async)",
+          body: briefMd,
+        });
+
+        await meta.mem0Add({
+          projectKey: args.project.projectKey,
+          issueIdentifier: issue.identifier,
+          namespace: "research.findings",
+          content:
+            `[research]\n` +
+            `Topic: ${topic}\n` +
+            `Playbook: ${selectedResearchPlaybookId}\n` +
+            `Summary: ${run.brief.summary}\n` +
+            `Sources: ${run.brief.sources.map((s) => s.url).join(", ")}`,
+          type: "research_finding",
+          intent: "research_brief_completed",
+          stage: "researching",
+          outcome: "success",
+          source: "workflow.operator",
+          runId: args.issueId,
+          agentId: executionPlan.resolution.selectedAgent.id,
+          appId: "xena",
+          infer: true,
+          tags: ["research", "async", "brief"],
+        });
+
+        if (run.brief.sources.length > 0) {
+          await postTrustEvent({
+            type: "research.source_verified",
+            actor: "agent",
+            value: Math.min(10, run.brief.sources.length),
+            metadata: { parseMode: run.parseMode, playbook: selectedResearchPlaybookId },
+          });
+        }
+
+        await postTrustEvent({
+          type: "execution.completed",
+          actor: "agent",
+          note: `Async research brief completed for "${topic}" (playbook: ${selectedResearchPlaybookId}, manus event: ${manusEvent.eventType}).`,
+        });
+      } else {
+        // ── Synchronous research brief (default) ───────────────────────────
+        await executeResearchBrief({
+          topic: issue.title,
+          objective: issue.description || `Create a decision-ready brief for ${issue.identifier}: ${issue.title}`,
+          agentId: executionPlan.resolution.selectedAgent.id,
+        });
+      }
 
       setStage("completed", "Research execution completed via resolved composition.");
     } else {
       // ── Coding execution path ────────────────────────────────────────────
-      // Coding-classified tickets delegate to the full coding lifecycle core workflow.
       coreHandle = await startChild(ticketWorkflowV2Core, {
         workflowId: coreWorkflowId,
         args: [{ ...args, playbookId: selectedCodingPlaybookId }],

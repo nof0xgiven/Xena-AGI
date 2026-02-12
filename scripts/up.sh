@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "/Users/ava/xena 2p0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$SCRIPT_DIR"
 
 echo "[xena2p0] Starting Temporal (docker compose)..."
 docker compose -f infra/docker-compose.temporal.yml up -d

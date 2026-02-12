@@ -38,6 +38,7 @@ const ServerEnvSchema = TemporalEnvSchema.extend({
     .optional(),
   XENA_AGENTMAIL_DRY_RUN: z.string().min(1).optional(),
   XENA_OWNER_EMAIL: z.string().min(1).optional(),
+  XENA_OWNER_NAME: z.string().min(1).optional(),
   XENA_SAFE_SENDER_EMAILS: z.string().min(1).optional(),
   MANUS_WEBHOOK_TOKEN: z.string().min(1).optional(),
   XENA_HTTP_PORT: z
@@ -73,6 +74,9 @@ const WorkerEnvSchema = TemporalEnvSchema.extend({
   XENA_AGENTMAIL_DOMAIN: z.string().min(1).optional(),
   XENA_AGENTMAIL_DISPLAY_NAME: z.string().min(1).optional(),
   XENA_OWNER_EMAIL: z.string().min(1).optional(),
+  XENA_OWNER_NAME: z.string().min(1).optional(),
+  XENA_OWNER_PROFILE_URL: z.string().min(1).optional(),
+  XENA_ROOT: z.string().min(1).optional(),
   OPENAI_API_KEY: z.string().min(1),
   XENA_OPENAI_MODEL: z.string().min(1),
   // GitHub / PR creation
@@ -113,6 +117,7 @@ export type ServerEnv = TemporalEnv & {
   XENA_AGENTMAIL_INTERVAL_MINUTES?: string;
   XENA_AGENTMAIL_DRY_RUN?: string;
   XENA_OWNER_EMAIL?: string;
+  XENA_OWNER_NAME?: string;
   XENA_SAFE_SENDER_EMAILS?: string;
   MANUS_WEBHOOK_TOKEN?: string;
   XENA_HTTP_PORT: string;
@@ -137,6 +142,9 @@ export type WorkerEnv = TemporalEnv & {
   XENA_AGENTMAIL_DOMAIN?: string;
   XENA_AGENTMAIL_DISPLAY_NAME?: string;
   XENA_OWNER_EMAIL?: string;
+  XENA_OWNER_NAME?: string;
+  XENA_OWNER_PROFILE_URL?: string;
+  XENA_ROOT?: string;
   OPENAI_API_KEY: string;
   XENA_OPENAI_MODEL: string;
   GH_TOKEN?: string;

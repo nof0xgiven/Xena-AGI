@@ -204,7 +204,7 @@ For task probes:
 
 ```bash
 set -a && source .env >/dev/null 2>&1 && set +a
-node -e "import('./dist/temporal/activities/operatorStatusActivities.js').then(async (m)=>{const s=await m.operatorGetTaskSnapshot({projectKey:'kahunas2'});console.log(s.probes)})"
+node -e "import('./dist/temporal/activities/operatorStatusActivities.js').then(async (m)=>{const s=await m.operatorGetTaskSnapshot({projectKey:process.env.DEFAULT_PROJECT_KEY});console.log(s.probes)})"
 ```
 
 ## Common Failure Modes

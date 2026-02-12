@@ -3,5 +3,32 @@ dist/
 runs/
 .env
 .env.local
+.env.*
+!.env.example
 .DS_Store
+ecosystem.config.cjs
 
+# Personality prompt
+docs/personality.md
+
+# Private keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# Log files
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Test coverage
+coverage/
