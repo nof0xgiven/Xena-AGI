@@ -1,0 +1,21 @@
+export type RegisteredAgentDefinition = {
+  schema_version: "1.0";
+  agent_id: string;
+  version: string;
+  name: string;
+  description: string;
+  provider: string;
+  model: string;
+  reasoning_effort: string;
+  system_prompt_ref: string;
+  tools: string[];
+  skills: string[];
+  execution_mode: "single_shot";
+  supervisor_mode: boolean;
+  output_schema_ref: string | null;
+  timeout_ms: number;
+  max_tool_calls: number;
+  enabled: boolean;
+  created_at: string;
+  updated_at: string;
+};
