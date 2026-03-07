@@ -29,6 +29,25 @@ describe("loadEnv", () => {
     expect(env.trigger.projectRef).toBe("proj_repo_alias");
   });
 
+  it("requires ingress auth tokens when ingress auth is enabled", () => {
+    expect(() => loadEnv({}, { requireIngressAuth: true })).toThrowError(
+      /xena api token/i
+    );
+  });
+
+  it("loads ingress auth tokens when configured", () => {
+    const env = loadEnv(
+      {
+        XENA_API_TOKEN: "api_token",
+        XENA_WEBHOOK_TOKEN: "webhook_token"
+      },
+      { requireIngressAuth: true }
+    );
+
+    expect(env.security.apiToken).toBe("api_token");
+    expect(env.security.webhookToken).toBe("webhook_token");
+  });
+
   it("rejects malformed service URLs", () => {
     expect(() =>
       loadEnv({

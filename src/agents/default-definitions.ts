@@ -11,6 +11,28 @@ function promptRef(relativePath: string): string {
 export const defaultAgentDefinitions: RegisteredAgentDefinition[] = [
   {
     schema_version: "1.0",
+    agent_id: "agent_html_page_builder",
+    version: "1.0.0",
+    name: "HTML Page Builder",
+    description:
+      "Creates simple HTML pages using constrained filesystem tools.",
+    provider: "openai",
+    model: "gpt-5.4",
+    reasoning_effort: "medium",
+    system_prompt_ref: promptRef("../prompts/assets/html-page-builder.md"),
+    tools: ["Read", "Write"],
+    skills: ["html_generation", "artifact_creation"],
+    execution_mode: "single_shot",
+    supervisor_mode: false,
+    output_schema_ref: null,
+    timeout_ms: 120_000,
+    max_tool_calls: 6,
+    enabled: true,
+    created_at: CREATED_AT,
+    updated_at: CREATED_AT
+  },
+  {
+    schema_version: "1.0",
     agent_id: "agent_marketing_content_creator",
     version: "1.0.0",
     name: "Content Creator",

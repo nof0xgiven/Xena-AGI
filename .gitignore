@@ -1,6 +1,7 @@
 coverage
 dist
 node_modules
+artifacts/generated
 .env
 .trigger
 .DS_Store

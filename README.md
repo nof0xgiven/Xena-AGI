@@ -106,6 +106,71 @@ The important part is what does *not* happen:
 - retries do not silently mutate history
 - memory does not become the only source of truth
 
+## Giving Xena A Task
+
+Right now the first real operator path is live and intentionally small:
+
+- `POST /tasks` is the public entrypoint
+- it validates the request against the OpenAPI contract
+- it forwards the canonical envelope into `POST /webhooks/ingress`
+- the webhook path persists `Task`, `Run`, and `Event`
+- Trigger executes one agent
+- the proof bundle is available at `GET /tasks/{taskId}/proof`
+
+That flow currently powers one simple proof agent:
+
+- `agent_html_page_builder`
+- prompt asset: [`src/prompts/assets/html-page-builder.md`](/Users/ava/main/projects/openSource/xena/src/prompts/assets/html-page-builder.md)
+- tools: `Read`, `Write`
+- write sandbox: `artifacts/generated/`
+
+So the current human workflow is:
+
+1. Send a task to `/tasks`.
+2. Xena runs the agent through Trigger.
+3. Xena writes the output artifact.
+4. You inspect the proof bundle.
+
+The public shape looks like this:
+
+```text
+      Bearer token
+human -------------> POST /tasks
+                         |
+                         | validate request
+                         v
+                 self-forward with
+                 webhook token header
+                         |
+                         v
+              POST /webhooks/ingress
+                         |
+                         | persist Task / Run / Event
+                         v
+                    Trigger.dev
+                         |
+                         | execute one agent
+                         v
+                  tool calls + result
+                         |
+             +-----------+------------+
+             |                        |
+             v                        v
+ artifacts/generated/*       GET /tasks/{id}/proof
+```
+
+What the proof route gives you:
+
+- original API input
+- resolved agent definition
+- rendered prompt
+- context bundle
+- tool registry
+- tool execution events
+- final result
+- persisted artifacts
+- run and task state
+
 ## A Concrete Example
 
 Imagine the system receives:
@@ -181,12 +246,15 @@ This repo now includes the v1 runtime backbone:
 - deterministic context builder
 - OpenAI provider execution path
 - Trigger task wrapper
+- authenticated HTTP ingress + webhook handoff
 - delegation, retry, reconciliation, and promotion flows
 - unit, integration, and scenario coverage
 
 Main runtime folders:
 
+- [`src/api`](/Users/ava/main/projects/openSource/xena/src/api)
 - [`src/contracts`](/Users/ava/main/projects/openSource/xena/src/contracts)
+- [`src/ingress`](/Users/ava/main/projects/openSource/xena/src/ingress)
 - [`src/persistence`](/Users/ava/main/projects/openSource/xena/src/persistence)
 - [`src/memory`](/Users/ava/main/projects/openSource/xena/src/memory)
 - [`src/runtime`](/Users/ava/main/projects/openSource/xena/src/runtime)
@@ -218,11 +286,61 @@ pnpm test
 pnpm trigger:dev
 ```
 
+5. Start the authenticated API:
+
+```bash
+pnpm api:start
+```
+
+For the public tunnel / managed local setup in this repo, PM2 is the intended operator path:
+
+```bash
+pm2 start ecosystem.config.cjs
+```
+
 Local service ports are intentionally non-default so this project does not collide with existing containers:
 
 - Postgres: `55432`
 - MinIO API: `19000`
 - MinIO Console: `19001`
+- API: `18791` via PM2 in the local ecosystem file
+
+### Required Ingress Auth
+
+The operator surface is protected now:
+
+- `POST /tasks` requires `Authorization: Bearer $XENA_API_TOKEN`
+- `POST /webhooks/ingress` requires `x-xena-webhook-token: $XENA_WEBHOOK_TOKEN`
+- `GET /tasks/{taskId}/proof` also requires `Authorization: Bearer $XENA_API_TOKEN`
+
+Add these to `.env`:
+
+```bash
+XENA_API_TOKEN=replace-me
+XENA_WEBHOOK_TOKEN=replace-me
+```
+
+Example task submission:
+
+```bash
+curl -X POST https://xena.ngrok.app/tasks \
+  -H "Authorization: Bearer $XENA_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agent_id": "agent_html_page_builder",
+    "business_id": "demo_business",
+    "project_id": "demo_project",
+    "title": "Hello World HTML",
+    "message": "Create hello world html page"
+  }'
+```
+
+Then inspect the proof:
+
+```bash
+curl https://xena.ngrok.app/tasks/<task_id>/proof \
+  -H "Authorization: Bearer $XENA_API_TOKEN"
+```
 
 ## If You Only Read Three Files
 

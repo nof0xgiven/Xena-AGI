@@ -13,10 +13,13 @@ const NodeEnvSchema = z
   .default("development");
 
 export type LoadEnvOptions = {
+  requireIngressAuth?: boolean;
   requireTrigger?: boolean;
 };
 
 export type AppEnv = {
+  apiPort: number;
+  publicBaseUrl: string;
   nodeEnv: "development" | "test" | "production";
   databaseUrl: string;
   postgres: {
@@ -38,10 +41,16 @@ export type AppEnv = {
     secretKey?: string;
     apiUrl?: string;
   };
+  security: {
+    apiToken?: string;
+    webhookToken?: string;
+  };
 };
 
 const InputSchema = z.looseObject({
   NODE_ENV: z.string().optional(),
+  XENA_API_PORT: z.string().optional(),
+  XENA_PUBLIC_BASE_URL: z.string().optional(),
   XENA_DATABASE_URL: z.string().optional(),
   XENA_POSTGRES_HOST: z.string().optional(),
   XENA_POSTGRES_PORT: z.string().optional(),
@@ -53,6 +62,8 @@ const InputSchema = z.looseObject({
   XENA_MINIO_ACCESS_KEY: z.string().optional(),
   XENA_MINIO_SECRET_KEY: z.string().optional(),
   XENA_MINIO_BUCKET: z.string().optional(),
+  XENA_API_TOKEN: z.string().optional(),
+  XENA_WEBHOOK_TOKEN: z.string().optional(),
   TRIGGER_PROJ_REF: z.string().optional(),
   TRIGGER_PROJECT_REF: z.string().optional(),
   TRIGGER_SECRET_KEY: z.string().optional(),
@@ -97,10 +108,16 @@ export function loadEnv(
 ): AppEnv {
   const raw = InputSchema.parse(source);
   const nodeEnv = NodeEnvSchema.parse(raw.NODE_ENV);
+  const apiPort = raw.XENA_API_PORT ? parsePort(raw.XENA_API_PORT) : 18_790;
   const databaseUrl = requireUrl(
     "Database URL",
     raw.XENA_DATABASE_URL ?? DEFAULT_DATABASE_URL,
     ["postgres:", "postgresql:"]
+  );
+  const publicBaseUrl = requireUrl(
+    "Public base URL",
+    raw.XENA_PUBLIC_BASE_URL ?? "https://xena.ngrok.app",
+    ["http:", "https:"]
   );
   const minioEndpoint = requireUrl(
     "MinIO endpoint",
@@ -118,6 +135,16 @@ export function loadEnv(
   if (options.requireTrigger && !raw.TRIGGER_SECRET_KEY) {
     throw new Error(
       "Trigger secret key is required when Trigger integration is enabled"
+    );
+  }
+
+  if (options.requireIngressAuth && !raw.XENA_API_TOKEN) {
+    throw new Error("Xena API token is required when ingress auth is enabled");
+  }
+
+  if (options.requireIngressAuth && !raw.XENA_WEBHOOK_TOKEN) {
+    throw new Error(
+      "Xena webhook token is required when ingress auth is enabled"
     );
   }
 
@@ -139,7 +166,19 @@ export function loadEnv(
     trigger.apiUrl = raw.TRIGGER_API_URL;
   }
 
+  const security: AppEnv["security"] = {};
+
+  if (raw.XENA_API_TOKEN) {
+    security.apiToken = raw.XENA_API_TOKEN;
+  }
+
+  if (raw.XENA_WEBHOOK_TOKEN) {
+    security.webhookToken = raw.XENA_WEBHOOK_TOKEN;
+  }
+
   return {
+    apiPort,
+    publicBaseUrl,
     nodeEnv,
     databaseUrl,
     postgres: {
@@ -156,7 +195,8 @@ export function loadEnv(
       secretKey: raw.XENA_MINIO_SECRET_KEY ?? DEFAULT_MINIO_SECRET_KEY,
       bucket: raw.XENA_MINIO_BUCKET ?? DEFAULT_MINIO_BUCKET
     },
-    trigger
+    trigger,
+    security
   };
 }
 

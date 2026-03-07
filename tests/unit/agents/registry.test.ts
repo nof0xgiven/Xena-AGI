@@ -29,7 +29,9 @@ describe("AgentRegistry", () => {
   });
 
   it("returns the latest enabled version when the caller omits a version", () => {
-    const contentCreatorDefinition = defaultAgentDefinitions[0];
+    const contentCreatorDefinition = defaultAgentDefinitions.find(
+      (definition) => definition.agent_id === "agent_marketing_content_creator"
+    );
 
     if (!contentCreatorDefinition) {
       throw new Error("Expected a default content creator definition");
@@ -84,8 +86,20 @@ describe("AgentRegistry", () => {
     expect(() =>
       buildToolRegistry(agent, {
         Read: {
-          description: "Read files",
-          name: "Read"
+          definition: {
+            description: "Read files",
+            name: "Read",
+            parameters: {
+              type: "object"
+            }
+          },
+          execute: () =>
+            Promise.resolve({
+              output: {},
+              recordedAt: new Date().toISOString(),
+              toolName: "Read",
+              trace: {}
+            })
         }
       })
     ).toThrowError(/tool "WebFetch" is not declared/i);

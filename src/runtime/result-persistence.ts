@@ -8,6 +8,7 @@ import {
 import type { DurableStore } from "../persistence/repositories/durable-store.js";
 import type { JsonValue } from "../persistence/repositories/durable-store.js";
 import { classifyProviderError } from "../providers/openai-provider.js";
+import type { RuntimeToolArtifact } from "../providers/tool-registry.js";
 
 function toJsonValue(value: unknown): JsonValue {
   return value as JsonValue;
@@ -31,7 +32,29 @@ function calculateDurationMs(
   return Math.max(0, completed - started);
 }
 
+function mergeArtifacts(
+  result: unknown,
+  artifacts: RuntimeToolArtifact[]
+): unknown {
+  if (!result || typeof result !== "object") {
+    return result;
+  }
+
+  const candidate = result as {
+    artifacts?: unknown;
+  };
+  const currentArtifacts = Array.isArray(candidate.artifacts)
+    ? (candidate.artifacts as unknown[])
+    : ([] as unknown[]);
+
+  return {
+    ...candidate,
+    artifacts: [...currentArtifacts, ...artifacts]
+  };
+}
+
 export async function persistSuccessfulExecution(input: {
+  generatedArtifacts?: RuntimeToolArtifact[];
   store: DurableStore;
   runId: string;
   taskId: string;
@@ -40,7 +63,9 @@ export async function persistSuccessfulExecution(input: {
   costEstimate: number | null;
   result: unknown;
 }): Promise<void> {
-  const validatedResult = AgentResultSchema.parse(input.result);
+  const validatedResult = AgentResultSchema.parse(
+    mergeArtifacts(input.result, input.generatedArtifacts ?? [])
+  );
 
   for (const artifact of validatedResult.artifacts) {
     const validatedArtifact = ArtifactSchema.parse(artifact);
