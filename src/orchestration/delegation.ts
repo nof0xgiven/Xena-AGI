@@ -1,5 +1,8 @@
 import { randomUUID } from "node:crypto";
 
+import { defaultAgentDefinitions } from "../agents/default-definitions.js";
+import { defaultAgentOverrides } from "../agents/default-overrides.js";
+import { AgentRegistry } from "../agents/registry.js";
 import { AgentResultSchema } from "../contracts/index.js";
 import type {
   DelegationContractRecord,
@@ -13,11 +16,22 @@ import { createMetrics, type Metrics } from "../observability/metrics.js";
 import { evaluateRequiredChildren } from "./delegation-state.js";
 
 type DelegationDependencies = {
+  environment?: string;
   logger?: Logger;
   metrics?: Metrics;
   now?: () => string;
+  registry?: AgentRegistry;
   store: DurableStore;
 };
+
+function isUniqueViolation(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "23505"
+  );
+}
 
 function eventId(): string {
   return `evt_${randomUUID()}`;
@@ -46,6 +60,9 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
   const now = dependencies.now ?? (() => new Date().toISOString());
   const logger = dependencies.logger ?? createLogger(now);
   const metrics = dependencies.metrics ?? createMetrics();
+  const registry =
+    dependencies.registry ??
+    new AgentRegistry(defaultAgentDefinitions, defaultAgentOverrides);
 
   return {
     async delegateFromResult(input: {
@@ -62,10 +79,42 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
         throw new Error("delegateFromResult requires a delegated AgentResult");
       }
 
+      const parentAgent = registry.resolve(
+        input.parentTask.requestedAgentId,
+        undefined,
+        {
+          businessId: input.parentTask.businessId,
+          ...(dependencies.environment
+            ? { environment: dependencies.environment }
+            : {}),
+          projectId: input.parentTask.projectId
+        }
+      );
+
+      if (!parentAgent.supervisor_mode || parentAgent.role_type !== "supervisor") {
+        throw new Error(
+          `Agent ${parentAgent.agent_id} is not allowed to delegate child tasks`
+        );
+      }
+
       const timestamp = now();
       const childTasks: { required: boolean; taskId: string }[] = [];
 
       for (const spawn of result.spawn) {
+        if (!parentAgent.allowed_delegate_to.includes(spawn.target_agent_id)) {
+          throw new Error(
+            `Agent ${parentAgent.agent_id} cannot delegate to ${spawn.target_agent_id}`
+          );
+        }
+
+        registry.resolve(spawn.target_agent_id, undefined, {
+          businessId: input.parentTask.businessId,
+          ...(dependencies.environment
+            ? { environment: dependencies.environment }
+            : {}),
+          projectId: input.parentTask.projectId
+        });
+
         const childTaskId = taskId();
 
         await dependencies.store.insertTask({
@@ -215,7 +264,7 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
         causationId: contract.delegationId,
         correlationId: contract.parentTaskId,
         createdAt: timestamp,
-        dedupeKey: null,
+        dedupeKey: `task.reentry_requested::${contract.delegationId}`,
         emittedBy: "xena.orchestration",
         eventId: eventId(),
         eventType: "task.reentry_requested",
@@ -228,7 +277,15 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
         taskId: contract.parentTaskId
       };
 
-      await dependencies.store.insertEvent(reentryEvent);
+      try {
+        await dependencies.store.insertEvent(reentryEvent);
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          return { reentryEvent: null };
+        }
+
+        throw error;
+      }
 
       logger.info("delegation.satisfied", {
         delegation_id: contract.delegationId,

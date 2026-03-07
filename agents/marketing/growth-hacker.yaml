@@ -7,6 +7,7 @@ domain: marketing
 role_type: supervisor
 reports_to: null
 allowed_delegate_to:
+  - agent_marketing_benchmark_analyst
   - agent_marketing_content_creator
   - agent_marketing_social_media_strategist
 provider: openai

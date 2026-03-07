@@ -231,4 +231,106 @@ updated_at: "2026-03-07T00:00:00.000Z"
       })
     ).toThrowError(/duplicate agent definition/i);
   });
+
+  it("rejects supervisors with no allowed children", async () => {
+    const rootDir = await createWorkspace();
+
+    await writeFile(
+      path.join(rootDir, "agents", "empty-supervisor.yaml"),
+      `schema_version: "1.0"
+agent_id: agent_empty_supervisor
+version: "1.0.0"
+name: Empty Supervisor
+description: No children configured
+provider: openai
+model: gpt-5.4
+reasoning_effort: high
+prompt_ref: prompts/parent.md
+tools: [Read]
+skills: [planning]
+domain: quality
+role_type: supervisor
+reports_to: null
+allowed_delegate_to: []
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 4
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"
+`,
+      "utf8"
+    );
+
+    expect(() =>
+      loadAgentDefinitions({
+        manifestDir: path.join(rootDir, "agents"),
+        rootDir
+      })
+    ).toThrowError(/must declare at least one allowed_delegate_to/i);
+  });
+
+  it("rejects reporting lines that point to leaf agents or cross domains", async () => {
+    const rootDir = await createWorkspace();
+
+    await writeFile(
+      path.join(rootDir, "agents", "leaf-manager.yaml"),
+      `schema_version: "1.0"
+agent_id: agent_leaf_manager
+version: "1.0.0"
+name: Leaf Manager
+description: Invalid manager
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: prompts/parent.md
+tools: [Read]
+skills: [testing]
+domain: marketing
+role_type: leaf
+reports_to: null
+allowed_delegate_to: []
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 4
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"
+`,
+      "utf8"
+    );
+    await writeFile(
+      path.join(rootDir, "agents", "cross-domain-child.yaml"),
+      `schema_version: "1.0"
+agent_id: agent_cross_domain_child
+version: "1.0.0"
+name: Cross Domain Child
+description: Reports to the wrong manager
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: prompts/child.md
+tools: [Read]
+skills: [testing]
+domain: operations
+role_type: leaf
+reports_to: agent_leaf_manager
+allowed_delegate_to: []
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 4
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"
+`,
+      "utf8"
+    );
+
+    expect(() =>
+      loadAgentDefinitions({
+        manifestDir: path.join(rootDir, "agents"),
+        rootDir
+      })
+    ).toThrowError(/reports_to non-supervisor|report within its domain/i);
+  });
 });

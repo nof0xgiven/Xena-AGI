@@ -1,0 +1,21 @@
+schema_version: "1.0"
+agent_id: agent_operations_process_analyst
+version: "1.0.0"
+name: Process Analyst
+description: Breaks down operations work into concrete process recommendations.
+domain: operations
+role_type: leaf
+reports_to: agent_operations_cmo
+allowed_delegate_to: []
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: src/prompts/assets/process-analyst.md
+tools: [Read, Write, WebSearch]
+skills: [operations_analysis, process_design]
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 10
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"

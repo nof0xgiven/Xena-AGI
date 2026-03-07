@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { defaultAgentDefinitions } from "../agents/default-definitions.js";
+import { defaultAgentOverrides } from "../agents/default-overrides.js";
 import { AgentRegistry } from "../agents/registry.js";
 import { loadProcessEnv } from "../config/env.js";
 import {
@@ -140,7 +141,8 @@ export function createWebhookProcessor(
   const sql = dependencies.sql ?? createDatabaseClient();
   const store = dependencies.store ?? createDurableStore(sql);
   const registry =
-    dependencies.registry ?? new AgentRegistry(defaultAgentDefinitions);
+    dependencies.registry ??
+    new AgentRegistry(defaultAgentDefinitions, defaultAgentOverrides);
   const runTask =
     dependencies.runTask ??
     (async (payload: { invocation: unknown }) => {
@@ -241,13 +243,17 @@ export function createWebhookProcessor(
       }
 
       const taskRequest = parseTaskRequestPayload(envelope);
-      const agent = registry.resolve(envelope.agent_id ?? taskRequest.agent_id);
+      const businessId = envelope.business_id ?? taskRequest.business_id;
+      const projectId = envelope.project_id ?? taskRequest.project_id;
+      const agent = registry.resolve(envelope.agent_id ?? taskRequest.agent_id, undefined, {
+        businessId,
+        environment: env.nodeEnv,
+        projectId
+      });
       const timestamp = now();
       const taskIdValue = envelope.task_id ?? taskId();
       const runIdValue = runId();
       const ingressEventId = eventId();
-      const businessId = envelope.business_id ?? taskRequest.business_id;
-      const projectId = envelope.project_id ?? taskRequest.project_id;
 
       await store.insertTask({
         assignedAt: timestamp,

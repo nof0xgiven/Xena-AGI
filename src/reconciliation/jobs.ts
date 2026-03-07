@@ -116,7 +116,7 @@ export function createReconciliationJobs(
             causationId: contract.delegationId,
             correlationId: contract.parentTaskId,
             createdAt: timestamp,
-            dedupeKey: null,
+            dedupeKey: `task.reentry_requested::${contract.delegationId}`,
             emittedBy: "xena.reconciliation",
             eventId: `evt_${randomUUID()}`,
             eventType: "task.reentry_requested",

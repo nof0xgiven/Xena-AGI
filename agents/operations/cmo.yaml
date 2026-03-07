@@ -1,0 +1,23 @@
+schema_version: "1.0"
+agent_id: agent_operations_cmo
+version: "1.0.0"
+name: Operations CMO
+description: Owns top-level operational execution and delegates implementation work.
+domain: operations
+role_type: supervisor
+reports_to: null
+allowed_delegate_to:
+  - agent_operations_process_analyst
+  - agent_operations_runbook_writer
+provider: openai
+model: gpt-5.4
+reasoning_effort: high
+prompt_ref: src/prompts/assets/operations-cmo.md
+tools: [Read, Write, WebSearch]
+skills: [operations_planning, systems_thinking, execution]
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 12
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"

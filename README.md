@@ -173,6 +173,20 @@ What the proof route gives you:
 
 Agent configuration now lives in validated manifests under [`agents`](/Users/ava/main/projects/openSource/xena/agents), with prompts still stored separately under [`src/prompts/assets`](/Users/ava/main/projects/openSource/xena/src/prompts/assets). The runtime loads those manifests at boot, validates prompt refs, known tools, and delegation topology, and then feeds the resulting definitions into the registry.
 
+The agent model is now intentionally explicit:
+
+- `role_type`: `leaf` or `supervisor`
+- `reports_to`: human/org metadata
+- `allowed_delegate_to`: runtime delegation policy
+- optional overrides by environment, business, or project
+
+So Xena can answer two different questions cleanly:
+
+- "Who does this agent belong under?"
+- "Who is this agent actually allowed to delegate to?"
+
+Those are not the same thing, and the runtime treats them differently on purpose.
+
 ## A Concrete Example
 
 Imagine the system receives:
@@ -241,6 +255,7 @@ This repo now includes the v1 runtime backbone:
 
 - toolchain and local dev setup
 - strict contracts and validation
+- validated agent manifests + override loading
 - durable Postgres schema + migrations
 - object storage adapter
 - agent registry + prompt rendering
@@ -250,6 +265,8 @@ This repo now includes the v1 runtime backbone:
 - Trigger task wrapper
 - authenticated HTTP ingress + webhook handoff
 - delegation, retry, reconciliation, and promotion flows
+- supervisor delegation policy enforcement
+- concurrent domain-supervisor scenario coverage
 - unit, integration, and scenario coverage
 
 Main runtime folders:
@@ -285,6 +302,7 @@ pnpm test
 Quality guardrails beyond the basics:
 
 ```bash
+pnpm check:agent-manifests
 pnpm check:boundaries
 pnpm check:unused
 pnpm check:duplication
@@ -294,6 +312,7 @@ pnpm check:quality
 
 What they do:
 
+- `check:agent-manifests`: validates agent manifests, prompt refs, topology, and overrides
 - `check:boundaries`: enforces module boundaries and blocks circular dependencies
 - `check:unused`: finds dead exports, unused files, and stale dependencies
 - `check:duplication`: catches copy-paste logic in production code
@@ -301,6 +320,28 @@ What they do:
 - `check:quality`: runs the full quality gate in one command
 
 GitHub Actions now uses `pnpm check:quality` as the branch gate and boots the same local Postgres + MinIO stack from `docker-compose.local.yml` before running it.
+
+### How Agents Scale
+
+If you want more agents, the flow is now:
+
+1. Add a prompt in [`src/prompts/assets`](/Users/ava/main/projects/openSource/xena/src/prompts/assets)
+2. Add a manifest in [`agents`](/Users/ava/main/projects/openSource/xena/agents)
+3. Optionally add overrides for a specific environment, business, or project
+4. Run `pnpm check:agent-manifests`
+5. Run `pnpm check:quality`
+
+Current domains in the repo:
+
+- `core`
+- `marketing`
+- `operations`
+
+Current proven orchestration states:
+
+- single agent task completion
+- supervisor -> child delegation with barrier re-entry
+- concurrent supervisors across different domains without cross-talk
 
 4. Boot Trigger locally:
 

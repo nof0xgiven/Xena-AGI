@@ -8,6 +8,11 @@ export const KNOWN_AGENT_TOOLS = [
 
 export type KnownAgentTool = (typeof KNOWN_AGENT_TOOLS)[number];
 export type AgentRoleType = "leaf" | "supervisor";
+export type ResolveAgentContext = {
+  businessId?: string;
+  environment?: string;
+  projectId?: string;
+};
 
 export type RegisteredAgentDefinition = {
   schema_version: "1.0";
@@ -33,4 +38,32 @@ export type RegisteredAgentDefinition = {
   enabled: boolean;
   created_at: string;
   updated_at: string;
+};
+
+export type RegisteredAgentOverride = {
+  schema_version: "1.0";
+  override_id: string;
+  match: {
+    agent_id: string;
+    version?: string | null;
+    environment?: string | null;
+    business_id?: string | null;
+    project_id?: string | null;
+  };
+  patch: Partial<
+    Pick<
+      RegisteredAgentDefinition,
+      | "allowed_delegate_to"
+      | "enabled"
+      | "max_tool_calls"
+      | "model"
+      | "output_schema_ref"
+      | "provider"
+      | "reasoning_effort"
+      | "skills"
+      | "system_prompt_ref"
+      | "timeout_ms"
+      | "tools"
+    >
+  >;
 };

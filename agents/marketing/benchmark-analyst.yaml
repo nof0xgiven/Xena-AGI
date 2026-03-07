@@ -1,0 +1,21 @@
+schema_version: "1.0"
+agent_id: agent_marketing_benchmark_analyst
+version: "1.0.0"
+name: Benchmark Analyst
+description: Collects comparable examples and benchmark references for marketing work.
+domain: marketing
+role_type: leaf
+reports_to: agent_marketing_growth_hacker
+allowed_delegate_to: []
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: src/prompts/assets/benchmark-analyst.md
+tools: [WebFetch, WebSearch, Read, Write]
+skills: [benchmarking, research, competitor_analysis]
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 10
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"

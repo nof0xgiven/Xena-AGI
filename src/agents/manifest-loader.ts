@@ -12,6 +12,7 @@ import type {
   RegisteredAgentDefinition
 } from "./types.js";
 import { KNOWN_AGENT_TOOLS } from "./types.js";
+import { compareVersions } from "./versioning.js";
 
 const DEFAULT_MANIFEST_ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -98,10 +99,16 @@ function resolvePromptPath(input: {
 }
 
 function validateTopology(definitions: readonly RegisteredAgentDefinition[]): void {
-  const enabledAgentIds = new Set(
-    definitions.filter((definition) => definition.enabled).map((definition) => definition.agent_id)
-  );
+  const enabledDefinitionsById = new Map<string, RegisteredAgentDefinition>();
   const seenDefinitions = new Set<string>();
+
+  for (const definition of definitions.filter((candidate) => candidate.enabled)) {
+    const current = enabledDefinitionsById.get(definition.agent_id);
+
+    if (!current || compareVersions(current.version, definition.version) < 0) {
+      enabledDefinitionsById.set(definition.agent_id, definition);
+    }
+  }
 
   for (const definition of definitions) {
     const definitionKey = `${definition.agent_id}@${definition.version}`;
@@ -118,16 +125,52 @@ function validateTopology(definitions: readonly RegisteredAgentDefinition[]): vo
       );
     }
 
-    if (definition.reports_to && !enabledAgentIds.has(definition.reports_to)) {
+    if (definition.role_type === "supervisor" && definition.allowed_delegate_to.length === 0) {
       throw new Error(
-        `Agent ${definition.agent_id} reports_to unknown enabled agent ${definition.reports_to}`
+        `Supervisor agent ${definition.agent_id} must declare at least one allowed_delegate_to target`
       );
     }
 
+    if (definition.reports_to) {
+      const manager = enabledDefinitionsById.get(definition.reports_to);
+
+      if (!manager) {
+        throw new Error(
+          `Agent ${definition.agent_id} reports_to unknown enabled agent ${definition.reports_to}`
+        );
+      }
+
+      if (manager.role_type !== "supervisor") {
+        throw new Error(
+          `Agent ${definition.agent_id} reports_to non-supervisor agent ${definition.reports_to}`
+        );
+      }
+
+      if (manager.domain !== definition.domain) {
+        throw new Error(
+          `Agent ${definition.agent_id} must report within its domain ${definition.domain}`
+        );
+      }
+    }
+
     for (const delegateAgentId of definition.allowed_delegate_to) {
-      if (!enabledAgentIds.has(delegateAgentId)) {
+      if (delegateAgentId === definition.agent_id) {
+        throw new Error(
+          `Agent ${definition.agent_id} cannot include itself in allowed_delegate_to`
+        );
+      }
+
+      const targetDefinition = enabledDefinitionsById.get(delegateAgentId);
+
+      if (!targetDefinition) {
         throw new Error(
           `Agent ${definition.agent_id} allowed_delegate_to references unknown enabled agent ${delegateAgentId}`
+        );
+      }
+
+      if (targetDefinition.domain !== definition.domain) {
+        throw new Error(
+          `Agent ${definition.agent_id} cannot delegate across domains to ${delegateAgentId}`
         );
       }
     }

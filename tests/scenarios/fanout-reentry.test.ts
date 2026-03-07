@@ -13,10 +13,24 @@ import {
 import { createDurableStore } from "../../src/persistence/repositories/durable-store.js";
 
 function defaultAgent() {
-  const agent = defaultAgentDefinitions[1];
+  const agent = defaultAgentDefinitions.find(
+    (definition) => definition.agent_id === "agent_marketing_growth_hacker"
+  );
 
   if (!agent) {
     throw new Error("Expected a default supervisor agent definition");
+  }
+
+  return agent;
+}
+
+function leafAgent() {
+  const agent = defaultAgentDefinitions.find(
+    (definition) => definition.agent_id === "agent_marketing_content_creator"
+  );
+
+  if (!agent) {
+    throw new Error("Expected a default leaf agent definition");
   }
 
   return agent;
@@ -58,34 +72,34 @@ function seedParentState() {
       result: null,
       artifacts: [],
       spawn: [
-        {
-          tool_name: "spawn_task",
-          target_agent_id: "agent_writer",
-          title: "Write launch copy",
-          message: "Create launch copy",
-          required: true,
+          {
+            tool_name: "spawn_task",
+            target_agent_id: "agent_marketing_content_creator",
+            title: "Write launch copy",
+            message: "Create launch copy",
+            required: true,
           priority: "high",
           context_overrides: null,
           expected_output: null,
           tags: ["copy"]
         },
-        {
-          tool_name: "spawn_task",
-          target_agent_id: "agent_designer",
-          title: "Design launch graphic",
-          message: "Create launch creative",
-          required: true,
+          {
+            tool_name: "spawn_task",
+            target_agent_id: "agent_marketing_social_media_strategist",
+            title: "Design launch graphic",
+            message: "Create launch creative",
+            required: true,
           priority: "high",
           context_overrides: null,
           expected_output: null,
           tags: ["design"]
         },
-        {
-          tool_name: "spawn_task",
-          target_agent_id: "agent_analyst",
-          title: "Gather benchmark references",
-          message: "Collect competitor examples",
-          required: false,
+          {
+            tool_name: "spawn_task",
+            target_agent_id: "agent_marketing_benchmark_analyst",
+            title: "Gather benchmark references",
+            message: "Collect competitor examples",
+            required: false,
           priority: "medium",
           context_overrides: null,
           expected_output: null,
@@ -283,5 +297,115 @@ describe.sequential("delegation and barrier re-entry", () => {
     expect(contract).toMatchObject({
       status: "failed"
     });
+  });
+
+  it("rejects delegation from leaf agents", async () => {
+    const agent = leafAgent();
+    const now = new Date().toISOString();
+    const taskId = `task_${randomUUID()}`;
+    const runId = `run_${randomUUID()}`;
+    const eventId = `evt_${randomUUID()}`;
+
+    const parentTask = {
+      assignedAt: now,
+      businessId: "biz_orchestration",
+      completedAt: null,
+      createdAt: now,
+      createdBy: "scenario_test",
+      message: "Attempt invalid delegation",
+      parentTaskId: null,
+      priority: "high",
+      projectId: "proj_orchestration",
+      requestedAgentId: agent.agent_id,
+      rootTaskId: taskId,
+      source: "scenario_test",
+      sourceRef: null,
+      stateId: "in_progress",
+      taskId,
+      title: "Invalid delegation",
+      updatedAt: now
+    } as const;
+    const parentRun = {
+      agentId: agent.agent_id,
+      attempt: 1,
+      completedAt: null,
+      costEstimate: null,
+      durationMs: null,
+      model: agent.model,
+      parentRunId: null,
+      provider: agent.provider,
+      reasoningEffort: agent.reasoning_effort,
+      resultPayload: null,
+      retryMetadata: null,
+      runId,
+      startedAt: now,
+      status: "running",
+      taskId,
+      tokenUsage: null,
+      triggerEventId: eventId
+    } as const;
+
+    await store.insertTask(parentTask);
+    await store.insertRun(parentRun);
+
+    await expect(
+      coordinator.delegateFromResult({
+        parentRun,
+        parentTask,
+        result: {
+          schema_version: SCHEMA_VERSION,
+          run_id: runId,
+          task_id: taskId,
+          agent_id: agent.agent_id,
+          summary: "Incorrectly delegating",
+          state_id: "awaiting_subtasks",
+          outcome: "delegated",
+          result: null,
+          artifacts: [],
+          spawn: [
+            {
+              tool_name: "spawn_task",
+              target_agent_id: "agent_marketing_social_media_strategist",
+              title: "Delegate illegally",
+              message: "Should be rejected",
+              required: true,
+              priority: "high",
+              context_overrides: null,
+              expected_output: null,
+              tags: []
+            }
+          ],
+          reentry_mode: "barrier",
+          reentry_objective: "Should never happen",
+          errors: [],
+          memory_writes: [],
+          completed_at: now
+        }
+      })
+    ).rejects.toThrow(/not allowed to delegate/i);
+  });
+
+  it("rejects delegation to children outside allowed_delegate_to", async () => {
+    const seed = seedParentState();
+
+    await store.insertTask(seed.task);
+    await store.insertRun(seed.run);
+    await store.insertEvent(seed.event);
+
+    await expect(
+      coordinator.delegateFromResult({
+        parentRun: seed.run,
+        parentTask: seed.task,
+        result: {
+          ...seed.result,
+          spawn: [
+            {
+              ...seed.result.spawn[0],
+              target_agent_id: "agent_operations_process_analyst"
+            }
+          ]
+        }
+      })
+    ).rejects.toThrow(/cannot delegate to/i);
   });
 });

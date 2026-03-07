@@ -15,7 +15,9 @@ import { createDurableStore } from "../../src/persistence/repositories/durable-s
 import { createReconciliationJobs } from "../../src/reconciliation/jobs.js";
 
 function defaultAgent() {
-  const agent = defaultAgentDefinitions[1];
+  const agent = defaultAgentDefinitions.find(
+    (definition) => definition.agent_id === "agent_marketing_growth_hacker"
+  );
 
   if (!agent) {
     throw new Error("Expected a default supervisor agent definition");
@@ -235,7 +237,7 @@ describe.sequential("retry and reconciliation", () => {
         spawn: [
           {
             tool_name: "spawn_task",
-            target_agent_id: "agent_writer",
+            target_agent_id: "agent_marketing_content_creator",
             title: "Write copy",
             message: "Create copy",
             required: true,
@@ -246,7 +248,7 @@ describe.sequential("retry and reconciliation", () => {
           },
           {
             tool_name: "spawn_task",
-            target_agent_id: "agent_designer",
+            target_agent_id: "agent_marketing_social_media_strategist",
             title: "Design creative",
             message: "Create image",
             required: true,

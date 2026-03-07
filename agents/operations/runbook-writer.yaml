@@ -1,0 +1,21 @@
+schema_version: "1.0"
+agent_id: agent_operations_runbook_writer
+version: "1.0.0"
+name: Runbook Writer
+description: Produces operational runbooks and execution checklists from delegated work.
+domain: operations
+role_type: leaf
+reports_to: agent_operations_cmo
+allowed_delegate_to: []
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: src/prompts/assets/runbook-writer.md
+tools: [Read, Write]
+skills: [runbooks, documentation, operations_execution]
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 10
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"
