@@ -12,12 +12,12 @@ const NodeEnvSchema = z
   .enum(["development", "test", "production"])
   .default("development");
 
-export type LoadEnvOptions = {
+type LoadEnvOptions = {
   requireIngressAuth?: boolean;
   requireTrigger?: boolean;
 };
 
-export type AppEnv = {
+type AppEnv = {
   apiPort: number;
   publicBaseUrl: string;
   nodeEnv: "development" | "test" | "production";

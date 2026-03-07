@@ -10,6 +10,7 @@ import type {
 } from "../persistence/repositories/durable-store.js";
 import { createLogger, type Logger } from "../observability/logger.js";
 import { createMetrics, type Metrics } from "../observability/metrics.js";
+import { evaluateRequiredChildren } from "./delegation-state.js";
 
 type DelegationDependencies = {
   logger?: Logger;
@@ -171,11 +172,10 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
       const taskStateById = new Map(
         childStates.map((childTask) => [childTask.taskId, childTask.stateId])
       );
-      const requiredFailed = contract.requiredChildren.some((child) => {
-        const state = taskStateById.get(child.task_id);
-
-        return state === "failed" || state === "blocked";
-      });
+      const { requiredFailed, requiredSatisfied } = evaluateRequiredChildren(
+        contract.requiredChildren,
+        taskStateById
+      );
 
       if (requiredFailed) {
         await dependencies.store.updateDelegationStatus({
@@ -198,12 +198,6 @@ export function createDelegationCoordinator(dependencies: DelegationDependencies
 
         return { reentryEvent: null };
       }
-
-      const requiredSatisfied = contract.requiredChildren.every((child) => {
-        const state = taskStateById.get(child.task_id);
-
-        return state === "completed";
-      });
 
       if (!requiredSatisfied) {
         return { reentryEvent: null };

@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 const TEMPLATE_VARIABLE_PATTERN = /{{\s*([a-zA-Z0-9_]+)\s*}}/g;
 const FRONTMATTER_PATTERN = /^---\n[\s\S]*?\n---\n?/;
 
-export function stripFrontmatter(markdown: string): string {
+function stripFrontmatter(markdown: string): string {
   return markdown.replace(FRONTMATTER_PATTERN, "").trim();
 }
 

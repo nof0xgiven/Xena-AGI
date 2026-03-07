@@ -6,7 +6,7 @@ import {
   MemoryRecordSchema
 } from "../contracts/index.js";
 
-export const CANONICAL_MEMORY_SCOPE_ORDER = [
+const CANONICAL_MEMORY_SCOPE_ORDER = [
   "project",
   "business",
   "agent",
@@ -17,7 +17,7 @@ type Artifact = z.infer<typeof ArtifactSchema>;
 type MemoryQuery = z.infer<typeof MemoryQuerySchema>;
 type MemoryRecord = z.infer<typeof MemoryRecordSchema>;
 
-export type RankedMemoryRecord = {
+type RankedMemoryRecord = {
   combined_score: number;
   lexical_score: number;
   record: MemoryRecord;

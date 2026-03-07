@@ -1,10 +1,10 @@
-export type CounterSample = {
+type CounterSample = {
   name: string;
   tags: Record<string, string>;
   value: number;
 };
 
-export type TimingSample = {
+type TimingSample = {
   name: string;
   tags: Record<string, string>;
   value: number;

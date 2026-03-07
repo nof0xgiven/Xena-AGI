@@ -39,6 +39,8 @@ export const AgentOutcomeEnum = z.enum([
   "needs_review"
 ]);
 
+export const AgentRoleTypeEnum = z.enum(["leaf", "supervisor"]);
+
 export const ArtifactTypeEnum = z.enum([
   "file",
   "json",

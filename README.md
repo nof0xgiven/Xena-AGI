@@ -171,6 +171,8 @@ What the proof route gives you:
 - persisted artifacts
 - run and task state
 
+Agent configuration now lives in validated manifests under [`agents`](/Users/ava/main/projects/openSource/xena/agents), with prompts still stored separately under [`src/prompts/assets`](/Users/ava/main/projects/openSource/xena/src/prompts/assets). The runtime loads those manifests at boot, validates prompt refs, known tools, and delegation topology, and then feeds the resulting definitions into the registry.
+
 ## A Concrete Example
 
 Imagine the system receives:
@@ -279,6 +281,26 @@ pnpm typecheck
 pnpm lint
 pnpm test
 ```
+
+Quality guardrails beyond the basics:
+
+```bash
+pnpm check:boundaries
+pnpm check:unused
+pnpm check:duplication
+pnpm check:structure
+pnpm check:quality
+```
+
+What they do:
+
+- `check:boundaries`: enforces module boundaries and blocks circular dependencies
+- `check:unused`: finds dead exports, unused files, and stale dependencies
+- `check:duplication`: catches copy-paste logic in production code
+- `check:structure`: enforces file-size and export-count limits, with a small exception list for known schema/repository hotspots
+- `check:quality`: runs the full quality gate in one command
+
+GitHub Actions now uses `pnpm check:quality` as the branch gate and boots the same local Postgres + MinIO stack from `docker-compose.local.yml` before running it.
 
 4. Boot Trigger locally:
 

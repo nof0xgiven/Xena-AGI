@@ -8,7 +8,7 @@ export const JsonObjectSchema = z.record(z.string(), z.unknown());
 export const LooseObjectSchema = z.object({}).catchall(z.unknown());
 export const SchemaVersionSchema = z.literal(SCHEMA_VERSION);
 
-export function prefixedId(prefix: string): z.ZodString {
+function prefixedId(prefix: string): z.ZodString {
   return NonEmptyStringSchema.regex(
     new RegExp(`^${prefix}[A-Za-z0-9._-]+$`),
     `${prefix} identifier must start with ${prefix}`

@@ -12,6 +12,7 @@ import type {
 } from "../persistence/repositories/durable-store.js";
 import { createLogger, type Logger } from "../observability/logger.js";
 import { createMetrics, type Metrics } from "../observability/metrics.js";
+import { evaluateRequiredChildren } from "../orchestration/delegation-state.js";
 
 type ReconciliationDependencies = {
   logger?: Logger;
@@ -78,11 +79,10 @@ export function createReconciliationJobs(
             .filter((task): task is NonNullable<typeof task> => task !== null)
             .map((task) => [task.taskId, task.stateId])
         );
-        const requiredFailed = contract.requiredChildren.some((child) => {
-          const state = taskStateById.get(child.task_id);
-
-          return state === "failed" || state === "blocked";
-        });
+        const { requiredFailed, requiredSatisfied } = evaluateRequiredChildren(
+          contract.requiredChildren,
+          taskStateById
+        );
 
         if (requiredFailed) {
           await dependencies.store.updateDelegationStatus({
@@ -99,12 +99,6 @@ export function createReconciliationJobs(
           reviewedTaskIds.push(contract.parentTaskId);
           continue;
         }
-
-        const requiredSatisfied = contract.requiredChildren.every((child) => {
-          const state = taskStateById.get(child.task_id);
-
-          return state === "completed";
-        });
 
         if (!requiredSatisfied) {
           continue;

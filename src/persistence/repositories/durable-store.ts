@@ -66,7 +66,7 @@ export type EventRecord = {
   createdAt: string;
 };
 
-export type DeadLetterRecord = {
+type DeadLetterRecord = {
   deadLetterId: string;
   eventId: string | null;
   taskId: string | null;
@@ -77,7 +77,7 @@ export type DeadLetterRecord = {
   createdAt: string;
 };
 
-export type ArtifactRecord = {
+type ArtifactRecord = {
   artifactId: string;
   taskId: string;
   runId: string;
@@ -92,7 +92,7 @@ export type ArtifactRecord = {
   createdAt: string;
 };
 
-export type MemoryRecordEntry = {
+type MemoryRecordEntry = {
   memoryId: string;
   memoryClass: string;
   scope: string;

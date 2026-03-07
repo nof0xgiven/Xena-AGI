@@ -1,9 +1,24 @@
+export const KNOWN_AGENT_TOOLS = [
+  "Edit",
+  "Read",
+  "WebFetch",
+  "WebSearch",
+  "Write"
+] as const;
+
+export type KnownAgentTool = (typeof KNOWN_AGENT_TOOLS)[number];
+export type AgentRoleType = "leaf" | "supervisor";
+
 export type RegisteredAgentDefinition = {
   schema_version: "1.0";
   agent_id: string;
   version: string;
   name: string;
   description: string;
+  domain: string;
+  role_type: AgentRoleType;
+  reports_to: string | null;
+  allowed_delegate_to: string[];
   provider: string;
   model: string;
   reasoning_effort: string;

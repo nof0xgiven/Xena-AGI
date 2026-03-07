@@ -1,0 +1,21 @@
+schema_version: "1.0"
+agent_id: agent_marketing_content_creator
+version: "1.0.0"
+name: Content Creator
+description: Expert content strategist and creator for multi-platform campaigns.
+domain: marketing
+role_type: leaf
+reports_to: agent_marketing_growth_hacker
+allowed_delegate_to: []
+provider: openai
+model: gpt-5.4
+reasoning_effort: medium
+prompt_ref: src/prompts/assets/content-creator.md
+tools: [WebFetch, WebSearch, Read, Write, Edit]
+skills: [content_strategy, brand_storytelling, seo_content]
+output_schema_ref: null
+timeout_ms: 120000
+max_tool_calls: 12
+enabled: true
+created_at: "2026-03-07T00:00:00.000Z"
+updated_at: "2026-03-07T00:00:00.000Z"

@@ -1,6 +1,6 @@
-export type LogLevel = "info" | "warn" | "error";
+type LogLevel = "info" | "warn" | "error";
 
-export type LogEntry = {
+type LogEntry = {
   fields: Record<string, unknown>;
   level: LogLevel;
   message: string;

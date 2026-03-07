@@ -21,6 +21,7 @@ import {
 } from "./common.js";
 import {
   AgentOutcomeEnum,
+  AgentRoleTypeEnum,
   ArtifactTypeEnum,
   DelegationStateEnum,
   ExecutionModeEnum,
@@ -58,6 +59,10 @@ export const AgentDefinitionSchema = z.strictObject({
   version: NonEmptyStringSchema,
   name: NonEmptyStringSchema,
   description: NonEmptyStringSchema,
+  domain: NonEmptyStringSchema,
+  role_type: AgentRoleTypeEnum,
+  reports_to: nullablePrefixedId("agent_"),
+  allowed_delegate_to: z.array(AgentIdSchema),
   provider: NonEmptyStringSchema,
   model: NonEmptyStringSchema,
   reasoning_effort: NonEmptyStringSchema,
@@ -299,7 +304,7 @@ export const MemoryPromotionRequestSchema = z.strictObject({
 });
 
 export type WebhookEnvelope = z.infer<typeof WebhookEnvelopeSchema>;
-export type Task = z.infer<typeof TaskSchema>;
+type Task = z.infer<typeof TaskSchema>;
 
 export function validateLineageChain(candidateTasks: readonly Task[]): void {
   const tasks = TaskSchema.array().parse(candidateTasks);

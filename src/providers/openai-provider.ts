@@ -57,7 +57,7 @@ export class ProviderTimeoutError extends ProviderExecutionError {
   }
 }
 
-export class ProviderAuthError extends ProviderExecutionError {
+class ProviderAuthError extends ProviderExecutionError {
   constructor(message: string) {
     super(message, {
       classification: "provider_auth",
@@ -67,7 +67,7 @@ export class ProviderAuthError extends ProviderExecutionError {
   }
 }
 
-export class ProviderMalformedResponseError extends ProviderExecutionError {
+class ProviderMalformedResponseError extends ProviderExecutionError {
   constructor(message: string) {
     super(message, {
       classification: "provider_malformed_response",

@@ -5,7 +5,7 @@ import {
   WebhookEnvelopeSchema
 } from "../contracts/index.js";
 
-export type IngressDecision =
+type IngressDecision =
   | { kind: "new"; scopeKey: string; fingerprint: string }
   | { kind: "duplicate"; scopeKey: string; fingerprint: string }
   | {
@@ -37,7 +37,7 @@ export function createIngressScopeKey(envelope: WebhookEnvelope): string {
   return `${businessScope}::${parsed.idempotency_key}`;
 }
 
-export function createIngressFingerprint(envelope: WebhookEnvelope): string {
+function createIngressFingerprint(envelope: WebhookEnvelope): string {
   const parsed = WebhookEnvelopeSchema.parse(envelope);
   const fingerprintPayload = {
     event_type: parsed.event_type,
