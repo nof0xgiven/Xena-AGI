@@ -326,15 +326,15 @@ Primary source docs:
 - operator override events
 
 **Tasks**
-- [ ] Implement bounded retry scheduling.
+- [x] Implement bounded retry scheduling.
 - [ ] Implement reconciliation scans for stale runs and parent tasks.
 - [ ] Add dead-letter persistence and inspection path.
 - [ ] Add review-queue persistence for tasks awaiting human review.
 - [ ] Add explicit operator override events.
 
 **Checks**
-- [ ] Retry exhaustion produces the correct terminal outcome.
-- [ ] Stale `awaiting_subtasks` parents can be recovered.
+- [x] Retry exhaustion produces the correct terminal outcome.
+- [x] Stale `awaiting_subtasks` parents can be recovered.
 - [ ] Dead-letter entries are queryable and linked to lineage.
 - [ ] Review-state tasks can be resumed only through explicit follow-up events.
 

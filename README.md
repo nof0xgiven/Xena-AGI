@@ -108,28 +108,33 @@ The important part is what does *not* happen:
 
 ## Giving Xena A Task
 
-Right now the first real operator path is live and intentionally small:
+Right now the first real operator path is live and the public surface is still intentionally small:
 
 - `POST /tasks` is the public entrypoint
 - it validates the request against the OpenAPI contract
 - it forwards the canonical envelope into `POST /webhooks/ingress`
-- the webhook path persists `Task`, `Run`, and `Event`
-- Trigger executes one agent
-- the proof bundle is available at `GET /tasks/{taskId}/proof`
+- the webhook path persists the root `Task`, `Run`, and `Event`
+- Trigger executes the requested agent
+- if that agent delegates, Xena creates child tasks, stores a `DelegationContract`, and moves the parent to `awaiting_subtasks`
+- when required children complete, Xena emits a parent re-entry event and runs the parent again with a fresh context bundle
+- `GET /tasks/{taskId}/proof` returns the full root lineage from one request
 
-That flow currently powers one simple proof agent:
+The smallest proof is still a single-agent task such as:
 
 - `agent_html_page_builder`
 - prompt asset: [`src/prompts/assets/html-page-builder.md`](/Users/ava/main/projects/openSource/xena/src/prompts/assets/html-page-builder.md)
 - tools: `Read`, `Write`
 - write sandbox: `artifacts/generated/`
 
+But the same operator path now also covers delegated supervisor runs. A root task can fan out work to child tasks, wait on required children, and then re-enter the parent so the final proof reflects the whole execution chain instead of only the first run.
+
 So the current human workflow is:
 
-1. Send a task to `/tasks`.
-2. Xena runs the agent through Trigger.
-3. Xena writes the output artifact.
-4. You inspect the proof bundle.
+1. Send a task to `/tasks` to create the root task.
+2. Xena executes the requested agent through Trigger.
+3. If the run delegates, Xena fans out child tasks and waits at the parent barrier.
+4. When required child work finishes, Xena re-enters the parent with fresh context.
+5. You inspect the proof bundle for the root task.
 
 The public shape looks like this:
 
@@ -145,32 +150,41 @@ human -------------> POST /tasks
                          v
               POST /webhooks/ingress
                          |
-                         | persist Task / Run / Event
+                         | persist root Task / Run / Event
                          v
                     Trigger.dev
                          |
-                         | execute one agent
+                         | execute requested agent
                          v
                   tool calls + result
                          |
-             +-----------+------------+
-             |                        |
-             v                        v
- artifacts/generated/*       GET /tasks/{id}/proof
+              +----------+-----------+
+              |                      |
+              | leaf completion      | delegated result
+              v                      v
+      artifacts/generated/*   child tasks + contract
+              |                      |
+              |                      | parent waits for
+              |                      | required children
+              |                      v
+              |               parent re-entry run
+              |                      |
+              +-----------+----------+
+                          |
+                          v
+               GET /tasks/{id}/proof
 ```
 
 What the proof route gives you:
 
-- original API input
-- resolved agent definition
-- rendered prompt
-- context bundle
-- tool registry
-- tool execution events
-- final result
-- persisted artifacts
-- run and task state
-
+- original root API input
+- resolved root agent definition
+- rendered root prompt
+- root invocation context bundle
+- root tool registry
+- every run and event in the root task lineage, including child work and parent re-entry
+- persisted artifacts and memory records across that lineage
+- the latest root-task result and current task state
 Agent configuration now lives in validated manifests under [`agents`](/Users/ava/main/projects/openSource/xena/agents), with prompts still stored separately under [`src/prompts/assets`](/Users/ava/main/projects/openSource/xena/src/prompts/assets). The runtime loads those manifests at boot, validates prompt refs, known tools, and delegation topology, and then feeds the resulting definitions into the registry.
 
 The agent model is now intentionally explicit:
@@ -404,6 +418,8 @@ Then inspect the proof:
 curl https://xena.ngrok.app/tasks/<task_id>/proof \
   -H "Authorization: Bearer $XENA_API_TOKEN"
 ```
+
+For the single-agent HTML demo, that proof is short. For a delegated supervisor task, the same route returns the root task plus child runs, re-entry events, artifacts, and memory records in one response.
 
 ## If You Only Read Three Files
 
